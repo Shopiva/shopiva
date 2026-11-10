@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="ms">
 <head>
@@ -5,7 +6,6 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="theme-color" content="#ee4d2d">
 <title>SHOPIVA — Affiliate Marketplace</title>
-
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
 <style>
@@ -18,9 +18,7 @@
   --text:#414141;
   --muted:#999;
 }
-
 * {box-sizing:border-box}
-
 body {
   margin:0;
   background:var(--bg);
@@ -29,9 +27,7 @@ body {
   font-size:13px;
   font-weight:400;
 }
-
 button,input,select {font:inherit}
-
 header {
   background:linear-gradient(110deg,#ee4d2d,#ff7892,#ffbd65);
   color:white;
@@ -40,25 +36,21 @@ header {
   top:0;
   z-index:10;
 }
-
 .top {
   display:flex;
   justify-content:space-between;
   align-items:center;
 }
-
 .logo {
   font-size:22px;
   letter-spacing:2px;
   font-weight:400;
 }
-
 .tagline {
   font-size:10px;
   margin-top:3px;
   opacity:.9;
 }
-
 .admin-btn {
   border:1px solid #ffffff80;
   background:#ffffff20;
@@ -67,7 +59,6 @@ header {
   padding:7px 12px;
   font-size:11px;
 }
-
 .search {
   width:100%;
   margin-top:14px;
@@ -79,7 +70,6 @@ header {
   color:#444;
   font-size:12px;
 }
-
 .banner {
   margin:12px;
   padding:18px;
@@ -87,31 +77,26 @@ header {
   color:white;
   background:linear-gradient(120deg,#7952b3,#ed7197);
 }
-
 .banner-title {
   font-size:17px;
   font-weight:400;
 }
-
 .banner p {
   font-size:11px;
   margin:6px 0 0;
   opacity:.9;
 }
-
 .section-title {
   padding:14px 12px 9px;
   font-size:13px;
   font-weight:400;
 }
-
 .categories {
   display:flex;
   gap:8px;
   padding:3px 12px 10px;
   overflow-x:auto;
 }
-
 .cat {
   flex-shrink:0;
   padding:8px 12px;
@@ -121,27 +106,24 @@ header {
   color:#666;
   font-size:11px;
 }
-
 .cat.active {
   color:var(--orange);
   border-color:var(--orange);
   background:#fff0eb;
 }
-
 .products {
   display:grid;
   grid-template-columns:repeat(2,minmax(0,1fr));
   gap:9px;
   padding:4px 10px 25px;
 }
-
 .product {
   background:white;
   border:1px solid #f0ece8;
   border-radius:10px;
   overflow:hidden;
+  min-width:0;
 }
-
 .photo {
   width:100%;
   aspect-ratio:1/1;
@@ -149,11 +131,19 @@ header {
   display:block;
   object-fit:cover;
 }
-
-.product-info {
-  padding:9px;
+.video-player {
+  display:block;
+  width:100%;
+  aspect-ratio:16/9;
+  background:#222;
+  object-fit:contain;
 }
-
+.video-label {
+  font-size:10px;
+  color:#888;
+  padding:7px 9px 0;
+}
+.product-info {padding:9px}
 .product-name {
   font-size:11px;
   font-weight:400;
@@ -165,14 +155,12 @@ header {
   -webkit-box-orient:vertical;
   overflow:hidden;
 }
-
 .price {
   color:var(--orange);
   font-size:13px;
   font-weight:400;
   margin:7px 0;
 }
-
 .buy {
   display:block;
   text-align:center;
@@ -184,22 +172,18 @@ header {
   font-weight:400;
   text-decoration:none;
 }
-
 .platform {
   font-size:9px;
   color:#999;
   margin-bottom:6px;
 }
-
 .hidden {display:none!important}
-
 footer {
   text-align:center;
   padding:22px 10px;
   font-size:10px;
   color:#999;
 }
-
 .panel {
   background:white;
   margin:12px;
@@ -207,13 +191,11 @@ footer {
   border-radius:12px;
   border:1px solid #eee;
 }
-
 .panel h3 {
   font-size:15px;
   font-weight:400;
   margin:0 0 14px;
 }
-
 .field {
   width:100%;
   padding:11px;
@@ -224,12 +206,10 @@ footer {
   color:#444;
   font-size:12px;
 }
-
 .field-label {
   font-size:11px;
   color:#777;
 }
-
 .action {
   width:100%;
   border:0;
@@ -241,39 +221,86 @@ footer {
   font-weight:400;
   margin:5px 0;
 }
-
-.secondary {
-  background:#7952b3;
-}
-
+.secondary {background:#7952b3}
 .product-row {
   border-bottom:1px solid #eee;
-  padding:10px 0;
+  padding:12px 0;
   display:flex;
-  justify-content:space-between;
+  flex-direction:column;
   gap:8px;
-  align-items:center;
 }
-
+.admin-product-top {
+  display:flex;
+  align-items:center;
+  gap:10px;
+}
+.admin-thumb {
+  width:65px;
+  height:65px;
+  flex-shrink:0;
+  object-fit:cover;
+  border-radius:7px;
+  background:#f6f2ef;
+}
+.admin-no-image {
+  width:65px;
+  height:65px;
+  flex-shrink:0;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  border-radius:7px;
+  background:#f6f2ef;
+  color:#aaa;
+  font-size:10px;
+}
+.admin-product-details {
+  flex:1;
+  min-width:0;
+}
+.admin-product-title {
+  font-size:12px;
+  color:#444;
+  overflow-wrap:anywhere;
+}
+.admin-media-video {
+  width:100%;
+  max-width:280px;
+  aspect-ratio:16/9;
+  display:block;
+  background:#222;
+  border-radius:8px;
+}
+.admin-media-label {
+  font-size:10px;
+  color:#888;
+  margin:3px 0;
+}
 .delete-btn {
   background:#fff0eb;
   color:#e44b35;
   border:0;
   border-radius:6px;
-  padding:7px;
+  padding:8px 12px;
   font-size:10px;
+  align-self:flex-start;
 }
-
 .message {
   font-size:11px;
   color:#d34b36;
   margin:7px 0;
 }
-
+.success-message {color:#24834b}
+.empty-message {
+  padding:10px;
+  color:#999;
+  font-size:11px;
+}
 @media(min-width:700px) {
   .products {grid-template-columns:repeat(4,minmax(0,1fr))}
   header {padding-left:5%;padding-right:5%}
   main {max-width:1100px;margin:auto}
+  #dashboard {max-width:900px;margin:auto}
 }
 </style>
 </head>
@@ -294,7 +321,6 @@ footer {
 </header>
 
 <main id="storefront">
-
   <div class="banner">
     <div class="banner-title">Selamat Datang ke SHOPIVA</div>
     <p>Temui pilihan produk menarik daripada Shopee dan TikTok Shop.</p>
@@ -308,7 +334,6 @@ footer {
 
   <div class="section-title">Semua Produk</div>
   <div class="products" id="products"></div>
-
 </main>
 
 <section id="loginPanel" class="panel hidden">
@@ -325,7 +350,6 @@ footer {
 </section>
 
 <section id="dashboard" class="hidden">
-
   <div class="panel">
     <h3>Dashboard SHOPIVA</h3>
     <div id="adminStats">Memuatkan statistik...</div>
@@ -336,8 +360,7 @@ footer {
     <h3>Tambah Produk Baharu</h3>
 
     <label class="field-label">Tajuk produk</label>
-    <input id="productTitle" class="field"
-      placeholder="Nama produk">
+    <input id="productTitle" class="field" placeholder="Nama produk">
 
     <label class="field-label">Harga (RM)</label>
     <input id="productPrice" class="field"
@@ -380,10 +403,9 @@ footer {
       Produk Pilihan SHOPIVA
     </label>
 
-    <button class="action" onclick="addProduct()">
+    <button class="action" id="saveProductButton" onclick="addProduct()">
       Simpan Produk
     </button>
-
     <div id="productMessage" class="message"></div>
   </div>
 
@@ -391,20 +413,17 @@ footer {
     <h3>Urus Produk</h3>
     <div id="adminProducts">Memuatkan produk...</div>
   </div>
-
 </section>
 
-<footer>
-  SHOPIVA © 2026 · Affiliate Marketplace
-</footer>
+<footer>SHOPIVA © 2026 · Affiliate Marketplace</footer>
 
 <script>
 // ========================================
 // SHOPIVA SUPABASE CONFIGURATION
 // ========================================
 
-// GANTIKAN DUA NILAI DI BAWAH DENGAN
-// PROJECT URL DAN PUBLISHABLE KEY ANDA.
+// Kekalkan Project URL dan Publishable Key
+// yang sama seperti kod SHOPIVA sebelum ini.
 
 const SUPABASE_URL = "https://komhhyccnlfwgndfbxnl.supabase.co";
 const SUPABASE_KEY = "sb_publishable__1YWZSsAo_oiMAXhQHcZbg_eqIQKN7U";
@@ -419,6 +438,7 @@ const db = window.supabase.createClient(
 let publicItems = [];
 let selectedCategory = "Semua";
 let adminUser = null;
+let savingProduct = false;
 
 const categories = [
   "Semua","Skincare","Kecantikan","Kesihatan",
@@ -450,8 +470,10 @@ function formatPrice(value) {
   return "RM" + Number(value).toFixed(2);
 }
 
-function showMessage(id, message) {
-  document.getElementById(id).textContent = message;
+function showMessage(id,message,success=false) {
+  const element = document.getElementById(id);
+  element.textContent = message;
+  element.classList.toggle("success-message",success);
 }
 
 function renderCategories() {
@@ -470,21 +492,48 @@ function selectCategory(category) {
   renderProducts();
 }
 
+// ========================================
+// PRODUCT CARD - PUBLIC STOREFRONT
+// ========================================
+
 function productCard(p) {
   const image = safeUrl(p.image_url);
+  const video = safeUrl(p.video_url);
   const link = safeUrl(p.affiliate_url);
 
   return `
     <article class="product">
+
       ${image
-        ? `<img class="photo" src="${escapeHTML(image)}" alt="${escapeHTML(p.title)}">`
+        ? `<img class="photo"
+            src="${escapeHTML(image)}"
+            alt="${escapeHTML(p.title)}"
+            loading="lazy">`
         : `<div class="photo"></div>`}
+
+      ${video
+        ? `<div class="video-label">Video produk</div>
+           <video class="video-player"
+             controls
+             playsinline
+             preload="metadata">
+             <source src="${escapeHTML(video)}">
+             Video tidak dapat dimainkan oleh pelayar ini.
+           </video>`
+        : ""}
+
       <div class="product-info">
         <div class="product-name">${escapeHTML(p.title)}</div>
         <div class="price">${formatPrice(p.price)}</div>
-        ${link ? `<a class="buy" href="${escapeHTML(link)}"
-          target="_blank" rel="noopener noreferrer"
-          onclick="trackClick('${p.id}')">Beli Sekarang</a>` : ""}
+        ${link
+          ? `<a class="buy"
+              href="${escapeHTML(link)}"
+              target="_blank"
+              rel="noopener noreferrer"
+              onclick="trackClick('${escapeHTML(p.id)}')">
+              Lihat Produk
+            </a>`
+          : ""}
       </div>
     </article>
   `;
@@ -504,12 +553,12 @@ function renderProducts() {
   document.getElementById("featured").innerHTML =
     featured.length
       ? featured.map(productCard).join("")
-      : `<div class="message">Belum ada produk pilihan.</div>`;
+      : `<div class="empty-message">Belum ada produk pilihan.</div>`;
 
   document.getElementById("products").innerHTML =
     filtered.length
       ? filtered.map(productCard).join("")
-      : `<div class="message">Produk belum tersedia.</div>`;
+      : `<div class="empty-message">Produk belum tersedia.</div>`;
 }
 
 async function loadProducts() {
@@ -521,7 +570,7 @@ async function loadProducts() {
     .order("created_at",{ascending:false});
 
   if(error) {
-    console.error(error);
+    console.error("Load products:",error);
     document.getElementById("products").textContent =
       "Produk gagal dimuatkan. Sila cuba lagi.";
     return;
@@ -539,6 +588,10 @@ async function trackClick(id) {
 
   if(error) console.error("Click tracking:",error.message);
 }
+
+// ========================================
+// LOGIN ADMIN
+// ========================================
 
 function openLogin() {
   document.getElementById("storefront").classList.add("hidden");
@@ -580,6 +633,7 @@ function showDashboard() {
   document.getElementById("storefront").classList.add("hidden");
   document.getElementById("loginPanel").classList.add("hidden");
   document.getElementById("dashboard").classList.remove("hidden");
+
   loadAdminProducts();
   loadAdminStats();
 }
@@ -587,10 +641,16 @@ function showDashboard() {
 async function logoutAdmin() {
   await db.auth.signOut();
   adminUser = null;
+
   document.getElementById("dashboard").classList.add("hidden");
   document.getElementById("storefront").classList.remove("hidden");
+
   loadProducts();
 }
+
+// ========================================
+// UPLOAD GAMBAR DAN VIDEO
+// ========================================
 
 async function uploadFile(file,bucket) {
   if(!file) return null;
@@ -605,41 +665,65 @@ async function uploadFile(file,bucket) {
   if(error) throw error;
 
   const {data} = db.storage.from(bucket).getPublicUrl(path);
+
+  if(!data || !data.publicUrl) {
+    throw new Error("Pautan fail tidak dapat dijana.");
+  }
+
   return data.publicUrl;
 }
 
 async function addProduct() {
-  if(!adminUser || adminUser.id !== ADMIN_UID) return;
+  if(!adminUser || adminUser.id !== ADMIN_UID) {
+    showMessage("productMessage","Sila log masuk sebagai admin.");
+    return;
+  }
+
+  if(savingProduct) return;
+  savingProduct = true;
+
+  const saveButton = document.getElementById("saveProductButton");
+  saveButton.disabled = true;
+  saveButton.textContent = "Sedang menyimpan...";
 
   const title = document.getElementById("productTitle").value.trim();
   const price = Number(document.getElementById("productPrice").value);
   const platform = document.getElementById("productPlatform").value;
   const category = document.getElementById("productCategory").value;
-  const affiliate = safeUrl(document.getElementById("productLink").value.trim());
+  const affiliate = safeUrl(
+    document.getElementById("productLink").value.trim()
+  );
 
   const imageFile = document.getElementById("productImage").files[0];
   const videoFile = document.getElementById("productVideo").files[0];
 
-  if(!title || !Number.isFinite(price) || price <= 0 || !affiliate) {
-    showMessage("productMessage","Sila isi tajuk, harga dan pautan affiliate yang sah.");
-    return;
-  }
-
-  if(imageFile && imageFile.size > 5*1024*1024) {
-    showMessage("productMessage","Gambar maksimum 5MB.");
-    return;
-  }
-
-  if(videoFile && videoFile.size > 50*1024*1024) {
-    showMessage("productMessage","Video maksimum 50MB.");
-    return;
-  }
-
-  showMessage("productMessage","Sedang menyimpan produk...");
-
   try {
+    if(!title || !Number.isFinite(price) || price <= 0 || !affiliate) {
+      throw new Error("Sila isi tajuk, harga dan pautan affiliate yang sah.");
+    }
+
+    if(imageFile && imageFile.size > 5*1024*1024) {
+      throw new Error("Gambar maksimum 5MB.");
+    }
+
+    if(videoFile && videoFile.size > 50*1024*1024) {
+      throw new Error("Video maksimum 50MB.");
+    }
+
+    if(imageFile && !["image/jpeg","image/png","image/webp"].includes(imageFile.type)) {
+      throw new Error("Format gambar mestilah JPG, PNG atau WebP.");
+    }
+
+    if(videoFile && !["video/mp4","video/webm"].includes(videoFile.type)) {
+      throw new Error("Format video mestilah MP4 atau WebM.");
+    }
+
+    showMessage("productMessage","Sedang memuat naik media...");
+
     const imageUrl = await uploadFile(imageFile,"product-images");
     const videoUrl = await uploadFile(videoFile,"product-videos");
+
+    showMessage("productMessage","Sedang menyimpan maklumat produk...");
 
     const {error} = await db.from("products").insert({
       title,
@@ -655,26 +739,43 @@ async function addProduct() {
 
     if(error) throw error;
 
-    showMessage("productMessage","Produk berjaya disimpan!");
+    showMessage("productMessage","Produk berjaya disimpan!",true);
 
-    ["productTitle","productPrice","productLink",
-     "productImage","productVideo"].forEach(id => {
-       document.getElementById(id).value = "";
+    [
+      "productTitle",
+      "productPrice",
+      "productLink",
+      "productImage",
+      "productVideo"
+    ].forEach(id => {
+      document.getElementById(id).value = "";
     });
 
     document.getElementById("productFeatured").checked = false;
 
     await loadProducts();
     await loadAdminProducts();
+    await loadAdminStats();
 
   } catch(error) {
-    console.error(error);
+    console.error("Add product:",error);
     showMessage("productMessage","Ralat: " + error.message);
+  } finally {
+    savingProduct = false;
+    saveButton.disabled = false;
+    saveButton.textContent = "Simpan Produk";
   }
 }
 
+// ========================================
+// ADMIN PRODUCT LIST - IMAGE + VIDEO
+// ========================================
+
 async function loadAdminProducts() {
   if(!adminUser || adminUser.id !== ADMIN_UID) return;
+
+  const container = document.getElementById("adminProducts");
+  container.textContent = "Memuatkan produk...";
 
   const {data,error} = await db
     .from("products")
@@ -682,23 +783,69 @@ async function loadAdminProducts() {
     .order("created_at",{ascending:false});
 
   if(error) {
-    document.getElementById("adminProducts").textContent = error.message;
+    container.textContent = error.message;
     return;
   }
 
-  document.getElementById("adminProducts").innerHTML =
-    (data || []).map(p => `
+  if(!data || !data.length) {
+    container.innerHTML = `<div class="empty-message">Belum ada produk.</div>`;
+    return;
+  }
+
+  container.innerHTML = data.map(p => {
+    const image = safeUrl(p.image_url);
+    const video = safeUrl(p.video_url);
+
+    return `
       <div class="product-row">
-        <div>
-          <div>${escapeHTML(p.title)}</div>
-          <div class="field-label">${formatPrice(p.price)} · ${escapeHTML(p.platform)}</div>
+
+        <div class="admin-product-top">
+          ${image
+            ? `<img class="admin-thumb"
+                src="${escapeHTML(image)}"
+                alt="${escapeHTML(p.title)}"
+                loading="lazy">`
+            : `<div class="admin-no-image">Tiada gambar</div>`}
+
+          <div class="admin-product-details">
+            <div class="admin-product-title">
+              ${escapeHTML(p.title)}
+            </div>
+            <div class="field-label">
+              ${formatPrice(p.price)} · ${escapeHTML(p.platform)}
+            </div>
+            <div class="field-label">
+              ${p.is_active ? "Aktif" : "Tidak aktif"}
+            </div>
+          </div>
         </div>
-        <button class="delete-btn" onclick="deleteProduct('${p.id}')">
-          Padam
+
+        ${video
+          ? `<div>
+              <div class="admin-media-label">Video produk</div>
+              <video class="admin-media-video"
+                controls
+                playsinline
+                preload="metadata">
+                <source src="${escapeHTML(video)}">
+                Video tidak dapat dimainkan.
+              </video>
+            </div>`
+          : `<div class="admin-media-label">Tiada video produk</div>`}
+
+        <button class="delete-btn"
+          onclick="deleteProduct('${escapeHTML(p.id)}')">
+          Padam Produk
         </button>
+
       </div>
-    `).join("") || "Belum ada produk.";
+    `;
+  }).join("");
 }
+
+// ========================================
+// DELETE PRODUCT
+// ========================================
 
 async function deleteProduct(id) {
   if(!adminUser || adminUser.id !== ADMIN_UID) return;
@@ -716,6 +863,10 @@ async function deleteProduct(id) {
   await loadAdminStats();
 }
 
+// ========================================
+// ADMIN STATISTICS
+// ========================================
+
 async function loadAdminStats() {
   if(!adminUser || adminUser.id !== ADMIN_UID) return;
 
@@ -724,6 +875,10 @@ async function loadAdminStats() {
     db.from("product_clicks").select("*",{count:"exact",head:true}),
     db.from("affiliate_sales").select("commission,status")
   ]);
+
+  if(products.error || clicks.error || sales.error) {
+    console.error("Stats error:",products.error,clicks.error,sales.error);
+  }
 
   const totalCommission = (sales.data || [])
     .filter(s => s.status==="approved")
@@ -735,10 +890,19 @@ async function loadAdminStats() {
     " | Komisen diluluskan: RM" + totalCommission.toFixed(2);
 }
 
+// ========================================
+// INITIALIZE SHOPIVA
+// ========================================
+
 async function initShopiva() {
   await loadProducts();
 
-  const {data} = await db.auth.getSession();
+  const {data,error} = await db.auth.getSession();
+
+  if(error) {
+    console.error("Session error:",error);
+    return;
+  }
 
   if(data.session && data.session.user.id === ADMIN_UID) {
     adminUser = data.session.user;
@@ -757,4 +921,3 @@ initShopiva();
 
 </body>
 </html>
-
