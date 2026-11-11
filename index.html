@@ -6,283 +6,883 @@
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <meta name="theme-color" content="#ee4d2d">
 <title>SHOPIVA — Affiliate Marketplace</title>
+
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
 <style>
-:root{--orange:#ee4d2d;--pink:#ff7892;--purple:#7952b3;--bg:#fff9f5;--text:#414141;--muted:#999;--line:#eee8e3}
+:root{
+  --orange:#ee4d2d;
+  --pink:#ff7892;
+  --purple:#7952b3;
+  --bg:#fff9f5;
+  --text:#414141;
+  --muted:#999;
+  --line:#eee8e3;
+}
+
 *{box-sizing:border-box}
-body{margin:0;background:var(--bg);color:var(--text);font-family:Arial,sans-serif;font-size:13px;padding-bottom:70px}
-button,input,select{font:inherit}button{cursor:pointer}
-header{background:linear-gradient(110deg,#ee4d2d,#ff7892,#ffbd65);color:white;padding:15px 14px 13px;position:sticky;top:0;z-index:10}
-.top{display:flex;justify-content:space-between;align-items:center}
-.logo{font-size:22px;letter-spacing:2px;font-weight:400}
-.tagline{font-size:10px;margin-top:3px;opacity:.9}
-.search{width:100%;margin-top:13px;border:0;outline:0;border-radius:9px;padding:11px 13px;background:white;color:#444;font-size:12px}
-.section-title{padding:15px 12px 9px;font-size:13px}
-.categories{display:flex;gap:8px;padding:3px 12px 10px;overflow-x:auto}
-.cat{flex-shrink:0;padding:8px 12px;border-radius:20px;border:1px solid #eee;background:white;color:#666;font-size:11px}
-.cat.active{color:var(--orange);border-color:var(--orange);background:#fff0eb}
-.products{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:9px;padding:4px 10px 22px}
-.product{background:white;border:1px solid var(--line);border-radius:11px;overflow:hidden;min-width:0}
-.photo{width:100%;aspect-ratio:1/1;object-fit:cover;display:block;background:#f6f2ef}
-.video-player{width:100%;aspect-ratio:9/12;max-height:310px;display:block;background:#171717;object-fit:contain}
-.product-info{padding:9px}
-.product-name{font-size:11px;line-height:1.5;min-height:32px;color:#555;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
-.product-like-row{display:flex;align-items:center;justify-content:space-between;gap:6px;margin-top:5px}
-.like-btn{border:0;background:#fff1ed;color:#999;border-radius:20px;width:30px;height:30px;font-size:17px}
-.like-btn.liked{color:#ee4d2d;background:#ffe2e4}
-.price{color:var(--orange);font-size:13px;margin:8px 0}
-.buy{display:block;text-align:center;padding:9px 4px;background:var(--orange);color:white;border-radius:7px;font-size:11px;text-decoration:none}
-.platform{font-size:9px;color:#999}
-.empty{padding:25px 12px;text-align:center;color:#999;font-size:12px;grid-column:1/-1}
-.page-heading{padding:17px 13px 5px;font-size:17px}
-.page-subtitle{padding:0 13px 12px;color:#999;font-size:11px}
-.me-card{background:white;border:1px solid var(--line);border-radius:12px;margin:12px;padding:18px;text-align:center}
-.me-avatar{width:62px;height:62px;border-radius:50%;background:#fff0eb;color:var(--orange);display:flex;align-items:center;justify-content:center;font-size:25px;margin:0 auto 10px}
-.me-title{font-size:15px;margin-bottom:5px}
-.me-desc{font-size:11px;color:#999;line-height:1.6}
-.me-button{width:100%;padding:11px;border:0;border-radius:8px;background:var(--orange);color:white;margin-top:14px}
-.bottom-nav{position:fixed;bottom:0;left:0;right:0;z-index:30;height:65px;background:white;border-top:1px solid var(--line);display:grid;grid-template-columns:repeat(5,1fr);padding-bottom:env(safe-area-inset-bottom)}
-.nav-item{border:0;background:white;color:#999;font-size:10px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px}
-.nav-icon{font-size:20px;line-height:1}
-.nav-item.active{color:var(--orange)}
-.hidden{display:none!important}
-.panel{background:white;margin:12px;padding:15px;border-radius:12px;border:1px solid var(--line)}
-.panel h3{font-size:15px;font-weight:400;margin:0 0 14px}
-.field{width:100%;padding:11px;border:1px solid #e5e5e5;border-radius:7px;margin:5px 0 12px;background:white;color:#444;font-size:12px}
-.field-label{font-size:11px;color:#777}
-.action{width:100%;border:0;border-radius:7px;background:var(--orange);color:white;padding:11px;font-size:12px;margin:5px 0}
-.secondary{background:var(--purple)}
-.message{font-size:11px;color:#d34b36;margin:7px 0}
-.success-message{color:#24834b}
-.product-row{border-bottom:1px solid #eee;padding:12px 0;display:flex;flex-direction:column;gap:9px}
-.admin-product-top{display:flex;align-items:center;gap:10px}
-.admin-thumb,.admin-no-image{width:65px;height:65px;flex-shrink:0;border-radius:7px;background:#f6f2ef;object-fit:cover}
-.admin-no-image{display:flex;align-items:center;justify-content:center;color:#aaa;font-size:10px}
-.admin-product-details{flex:1;min-width:0}
-.admin-product-title{font-size:12px;overflow-wrap:anywhere}
-.admin-media-video{width:100%;max-width:280px;aspect-ratio:16/9;display:block;background:#222;border-radius:8px}
-.admin-media-label{font-size:10px;color:#888;margin:3px 0}
-.admin-actions{display:flex;gap:7px}
-.edit-btn,.delete-btn{border:0;border-radius:6px;padding:8px 12px;font-size:10px}
-.edit-btn{background:#f0eaff;color:#7952b3}
-.delete-btn{background:#fff0eb;color:#e44b35}
-.form-note{font-size:10px;color:#999;margin:-5px 0 10px}
 
-/* VIDEO FULL SCREEN */
-body.video-mode{padding-bottom:0;overflow:hidden;background:#000}
-body.video-mode header,body.video-mode footer{display:none}
-body.video-mode #videoPage{position:fixed;inset:0;width:100%;height:100dvh;display:block;z-index:20;background:#000;margin:0;padding:0;overflow:hidden}
-.video-feed{position:absolute;inset:0;width:100%;height:100dvh;min-height:100dvh;overflow-y:auto;overflow-x:hidden;scroll-snap-type:y mandatory;overscroll-behavior:contain;-webkit-overflow-scrolling:touch;background:#000;scrollbar-width:none}
-.video-feed::-webkit-scrollbar{display:none}
-.video-slide{position:relative;width:100%;height:100dvh;min-height:100dvh;overflow:hidden;scroll-snap-align:start;scroll-snap-stop:always;background:#000}
-.video-slide video{position:absolute;inset:0;width:100%;height:100%;display:block;object-fit:cover;object-position:center center;background:#000}
-.video-overlay{position:absolute;left:0;right:0;bottom:0;z-index:2;padding:65px 15px 105px;background:linear-gradient(transparent,rgba(0,0,0,.12) 30%,rgba(0,0,0,.78));color:white;pointer-events:none}
-.video-title{font-size:14px;line-height:1.5;margin-bottom:8px;text-shadow:0 1px 3px #000}
-.video-price{font-size:14px;font-weight:bold;margin-bottom:12px;color:#ffd28a;text-shadow:0 1px 3px #000}
-.video-cta{display:inline-block;background:var(--orange);color:white;text-decoration:none;padding:12px 25px;border-radius:25px;font-size:12px;font-weight:bold;opacity:0;transform:translateY(12px);transition:opacity .3s,transform .3s;pointer-events:none}
-.video-cta.show{opacity:1;transform:translateY(0);pointer-events:auto}
-.video-sound{position:absolute;right:15px;bottom:145px;width:42px;height:42px;border:1px solid #ffffff55;border-radius:50%;background:#0008;color:white;font-size:18px;z-index:4;display:flex;align-items:center;justify-content:center}
-.video-mode .bottom-nav{background:rgba(20,20,20,.78);border-top:1px solid #ffffff22;backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px)}
-.video-mode .nav-item{background:transparent;color:#ddd}
-.video-mode .nav-item.active{color:#ff795e}
-@media(min-width:700px){
- .products{grid-template-columns:repeat(4,minmax(0,1fr))}
- header{padding-left:5%;padding-right:5%}
- main,#dashboard{max-width:1100px;margin:auto}
+body{
+  margin:0;
+  background:var(--bg);
+  color:var(--text);
+  font-family:Arial,sans-serif;
+  font-size:13px;
+  padding-bottom:75px;
 }
- 
-/* SHOPIVA — COMPACT PRODUCT DISPLAY */
+
+button,input,select{font:inherit}
+button{cursor:pointer}
+
+header{
+  background:linear-gradient(110deg,#ee4d2d,#ff7892,#ffbd65);
+  color:white;
+  padding:15px 14px 13px;
+  position:sticky;
+  top:0;
+  z-index:10;
+}
+
+.top{
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+}
+
+.logo{
+  font-size:22px;
+  letter-spacing:2px;
+  font-weight:bold;
+}
+
+.tagline{
+  font-size:10px;
+  margin-top:3px;
+  opacity:.9;
+}
+
+.search{
+  width:100%;
+  margin-top:13px;
+  border:0;
+  outline:0;
+  border-radius:9px;
+  padding:11px 13px;
+  background:white;
+  color:#444;
+  font-size:12px;
+}
+
+.section-title{
+  padding:15px 12px 9px;
+  font-size:13px;
+  font-weight:bold;
+}
+
+.categories{
+  display:flex;
+  gap:8px;
+  padding:3px 12px 10px;
+  overflow-x:auto;
+  scrollbar-width:none;
+}
+
+.categories::-webkit-scrollbar{display:none}
+
+.cat{
+  flex-shrink:0;
+  padding:8px 12px;
+  border-radius:20px;
+  border:1px solid #eee;
+  background:white;
+  color:#666;
+  font-size:11px;
+}
+
+.cat.active{
+  color:var(--orange);
+  border-color:var(--orange);
+  background:#fff0eb;
+}
+
 .products{
-  grid-template-columns:repeat(2,minmax(0,1fr))!important;
-  gap:7px!important;
-  padding:4px 8px 16px!important;
-}
-
-.product{
-  border-radius:9px!important;
-}
-
-.photo{
-  aspect-ratio:1/1!important;
-  max-height:155px!important;
-  object-fit:cover!important;
-}
-
-.product-info{
-  padding:7px!important;
-}
-
-.product-name{
-  font-size:10px!important;
-  line-height:1.4!important;
-  min-height:28px!important;
-}
-
-.price{
-  font-size:12px!important;
-  margin:5px 0!important;
-}
-
-.buy{
-  padding:7px 4px!important;
-  font-size:10px!important;
-}
-
-.like-btn{
-  width:27px!important;
-  height:27px!important;
-  font-size:15px!important;
-}
-
-@media(min-width:768px){
-  .products{
-    grid-template-columns:repeat(4,minmax(0,1fr))!important;
-  }
-
-  .photo{
-    max-height:220px!important;
-  }
-}
-/* SHOPIVA — FORCE COMPACT PRODUCT SIZE */
-
-#featuredProducts,
-#publicProducts{
-  display:grid!important;
-  grid-template-columns:repeat(2,minmax(0,1fr))!important;
-  gap:7px!important;
-  padding:4px 8px 18px!important;
+  display:grid;
+  grid-template-columns:repeat(2,minmax(0,1fr));
+  gap:7px;
+  padding:4px 8px 18px;
 }
 
 .public-product-card{
-  width:100%!important;
-  min-width:0!important;
-  overflow:hidden!important;
-  border:1px solid #eee8e3!important;
-  border-radius:9px!important;
-  background:#fff!important;
+  width:100%;
+  min-width:0;
+  overflow:hidden;
+  border:1px solid var(--line);
+  border-radius:9px;
+  background:white;
 }
 
-.public-product-card .photo{
-  position:relative!important;
-  width:100%!important;
-  height:auto!important;
-  aspect-ratio:1/1!important;
-  max-height:145px!important;
-  overflow:hidden!important;
+.photo{
+  position:relative;
+  width:100%;
+  aspect-ratio:1/1;
+  max-height:155px;
+  overflow:hidden;
+  background:#f6f2ef;
 }
 
-.public-product-card .photo img,
-.public-product-card .photo video{
-  width:100%!important;
-  height:100%!important;
-  object-fit:cover!important;
-  display:block!important;
+.photo img{
+  width:100%;
+  height:100%;
+  display:block;
+  object-fit:cover;
 }
 
-.public-product-card .product-info{
-  padding:7px!important;
+.no-image{
+  width:100%;
+  height:100%;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  color:#bbb;
+  font-size:13px;
 }
 
-.public-product-card .product-info h3{
-  font-size:11px!important;
-  line-height:1.4!important;
-  margin:0 0 5px!important;
+.featured-label{
+  position:absolute;
+  top:7px;
+  left:6px;
+  padding:4px 6px;
+  background:#ee4d2d;
+  color:white;
+  font-size:8px;
+  border-radius:4px;
 }
 
-.public-product-card .product-price{
-  font-size:12px!important;
-  margin:5px 0!important;
+.like-btn{
+  position:absolute;
+  right:6px;
+  top:6px;
+  z-index:3;
+  border:0;
+  background:#ffffffeb;
+  color:#999;
+  border-radius:50%;
+  width:28px;
+  height:28px;
+  font-size:16px;
 }
 
-.public-product-card .buy-button{
-  width:100%!important;
-  padding:7px 4px!important;
-  font-size:10px!important;
+.like-btn.liked{
+  color:#ee4d2d;
+  background:#ffe2e4;
 }
+
+.product-info{padding:7px}
+
+.product-info h3{
+  font-size:11px;
+  line-height:1.4;
+  font-weight:normal;
+  margin:0 0 5px;
+  min-height:30px;
+  color:#555;
+  display:-webkit-box;
+  -webkit-line-clamp:2;
+  -webkit-box-orient:vertical;
+  overflow:hidden;
+}
+
+.product-price{
+  color:var(--orange);
+  font-size:12px;
+  margin:5px 0;
+  font-weight:bold;
+}
+
+.buy-button{
+  width:100%;
+  display:block;
+  text-align:center;
+  padding:8px 4px;
+  background:var(--orange);
+  color:white;
+  border:0;
+  border-radius:7px;
+  font-size:10px;
+}
+
+.empty{
+  padding:25px 12px;
+  text-align:center;
+  color:#999;
+  font-size:12px;
+  grid-column:1/-1;
+}
+
+.page-heading{
+  padding:17px 13px 5px;
+  font-size:17px;
+}
+
+.page-subtitle{
+  padding:0 13px 12px;
+  color:#999;
+  font-size:11px;
+}
+
+.me-card{
+  background:white;
+  border:1px solid var(--line);
+  border-radius:12px;
+  margin:12px;
+  padding:18px;
+  text-align:center;
+}
+
+.me-avatar{
+  width:62px;
+  height:62px;
+  border-radius:50%;
+  background:#fff0eb;
+  color:var(--orange);
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  font-size:25px;
+  margin:0 auto 10px;
+}
+
+.me-title{font-size:15px;margin-bottom:5px}
+
+.me-desc{
+  font-size:11px;
+  color:#999;
+  line-height:1.6;
+}
+
+.me-button{
+  width:100%;
+  padding:11px;
+  border:0;
+  border-radius:8px;
+  background:var(--orange);
+  color:white;
+  margin-top:14px;
+}
+
+.bottom-nav{
+  position:fixed;
+  bottom:0;
+  left:0;
+  right:0;
+  z-index:30;
+  height:65px;
+  background:white;
+  border-top:1px solid var(--line);
+  display:grid;
+  grid-template-columns:repeat(5,1fr);
+  padding-bottom:env(safe-area-inset-bottom);
+}
+
+.nav-item{
+  border:0;
+  background:white;
+  color:#999;
+  font-size:10px;
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  justify-content:center;
+  gap:4px;
+}
+
+.nav-icon{font-size:20px;line-height:1}
+
+.nav-item.active{color:var(--orange)}
+
+.hidden{display:none!important}
+
+.panel{
+  background:white;
+  margin:12px;
+  padding:15px;
+  border-radius:12px;
+  border:1px solid var(--line);
+}
+
+.panel h3{
+  font-size:15px;
+  font-weight:400;
+  margin:0 0 14px;
+}
+
+.field{
+  width:100%;
+  padding:11px;
+  border:1px solid #e5e5e5;
+  border-radius:7px;
+  margin:5px 0 12px;
+  background:white;
+  color:#444;
+  font-size:12px;
+}
+
+.field-label{font-size:11px;color:#777}
+
+.action{
+  width:100%;
+  border:0;
+  border-radius:7px;
+  background:var(--orange);
+  color:white;
+  padding:11px;
+  font-size:12px;
+  margin:5px 0;
+}
+
+.secondary{background:var(--purple)}
+
+.message{
+  font-size:11px;
+  color:#d34b36;
+  margin:7px 0;
+}
+
+.success-message{color:#24834b}
+
+.form-note{
+  font-size:10px;
+  color:#999;
+  margin:-5px 0 10px;
+}
+
+.preview-image{
+  width:100px;
+  height:100px;
+  object-fit:cover;
+  border-radius:10px;
+}
+
+.preview-video{
+  width:150px;
+  max-height:180px;
+  border-radius:10px;
+}
+
+/* ADMIN PRODUCT LIST */
+
+.admin-product-row{
+  display:flex;
+  align-items:center;
+  gap:10px;
+  padding:12px 0;
+  border-bottom:1px solid var(--line);
+}
+
+.admin-product-image{
+  width:65px;
+  height:65px;
+  flex-shrink:0;
+  border-radius:7px;
+  background:#f6f2ef;
+  overflow:hidden;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  color:#aaa;
+}
+
+.admin-product-image img{
+  width:100%;
+  height:100%;
+  object-fit:cover;
+}
+
+.admin-product-info{
+  flex:1;
+  min-width:0;
+  overflow-wrap:anywhere;
+}
+
+.admin-product-info strong{font-size:11px}
+.admin-product-info p{font-size:11px;color:var(--orange);margin:5px 0}
+.admin-product-info small{display:block;color:#999;font-size:9px;margin-top:3px}
+
+.admin-product-actions{
+  display:flex;
+  flex-direction:column;
+  gap:5px;
+}
+
+.admin-product-actions button{
+  border:0;
+  border-radius:5px;
+  padding:7px 9px;
+  font-size:10px;
+}
+
+.admin-product-actions button:first-child{
+  background:#f0eaff;
+  color:#7952b3;
+}
+
+.admin-product-actions button:last-child{
+  background:#fff0eb;
+  color:#e44b35;
+}
+
+/* DASHBOARD */
+
+.stats-grid{
+  display:grid;
+  grid-template-columns:repeat(2,minmax(0,1fr));
+  gap:8px;
+}
+
+.stat-card{
+  background:#fff8f4;
+  border:1px solid #f5e7df;
+  padding:12px;
+  border-radius:9px;
+}
+
+.stat-card small{color:#999;font-size:10px}
+.stat-card strong{display:block;font-size:20px;color:var(--orange);margin-top:6px}
+
+/* FULLSCREEN VIDEO FEED */
+
+body.video-mode{
+  padding-bottom:0;
+  overflow:hidden;
+  background:#000;
+}
+
+body.video-mode header,
+body.video-mode footer{
+  display:none;
+}
+
+body.video-mode #videoPage{
+  position:fixed;
+  inset:0;
+  width:100%;
+  height:100dvh;
+  display:block;
+  z-index:20;
+  background:#000;
+  margin:0;
+  padding:0;
+  overflow:hidden;
+}
+
+.video-feed{
+  position:absolute;
+  inset:0;
+  width:100%;
+  height:100dvh;
+  overflow-y:auto;
+  overflow-x:hidden;
+  scroll-snap-type:y mandatory;
+  overscroll-behavior:contain;
+  -webkit-overflow-scrolling:touch;
+  background:#000;
+  scrollbar-width:none;
+}
+
+.video-feed::-webkit-scrollbar{display:none}
+
+.video-slide{
+  position:relative;
+  width:100%;
+  height:100dvh;
+  min-height:100dvh;
+  overflow:hidden;
+  scroll-snap-align:start;
+  scroll-snap-stop:always;
+  background:#000;
+}
+
+.feed-video{
+  position:absolute;
+  inset:0;
+  width:100%;
+  height:100%;
+  display:block;
+  object-fit:cover;
+  object-position:center;
+  background:#000;
+}
+
+.video-overlay{
+  position:absolute;
+  inset:45% 0 0;
+  z-index:2;
+  pointer-events:none;
+  background:linear-gradient(transparent,rgba(0,0,0,.78));
+}
+
+.video-details{
+  position:absolute;
+  left:15px;
+  right:65px;
+  bottom:105px;
+  z-index:4;
+  color:white;
+  pointer-events:none;
+}
+
+.video-details h3{
+  font-size:14px;
+  line-height:1.5;
+  margin:0 0 7px;
+  text-shadow:0 1px 3px #000;
+}
+
+.video-details p{
+  font-size:15px;
+  color:#ffd28a;
+  font-weight:bold;
+  margin:0 0 12px;
+}
+
+.video-buy{
+  border:0;
+  border-radius:25px;
+  background:var(--orange);
+  color:white;
+  padding:11px 23px;
+  font-size:12px;
+  font-weight:bold;
+  opacity:0;
+  transform:translateY(10px);
+  transition:opacity .3s,transform .3s;
+  pointer-events:none;
+}
+
+.video-buy.show{
+  opacity:1;
+  transform:translateY(0);
+  pointer-events:auto;
+}
+
+.video-sound{
+  position:absolute;
+  right:15px;
+  bottom:145px;
+  width:42px;
+  height:42px;
+  border:1px solid #ffffff55;
+  border-radius:50%;
+  background:#0008;
+  color:white;
+  font-size:18px;
+  z-index:5;
+}
+
+.video-progress{
+  position:absolute;
+  top:0;
+  left:0;
+  height:3px;
+  width:0;
+  background:var(--pink);
+  z-index:6;
+}
+
+.video-empty{
+  height:100%;
+  display:flex;
+  flex-direction:column;
+  justify-content:center;
+  align-items:center;
+  color:white;
+  text-align:center;
+  padding:20px;
+}
+
+.video-empty p{color:#aaa}
+
+.video-mode .bottom-nav{
+  background:rgba(20,20,20,.78);
+  border-top:1px solid #ffffff22;
+  backdrop-filter:blur(12px);
+  -webkit-backdrop-filter:blur(12px);
+}
+
+.video-mode .nav-item{
+  background:transparent;
+  color:#ddd;
+}
+
+.video-mode .nav-item.active{color:#ff795e}
+
+/* FOOTER */
+
+footer{
+  text-align:center;
+  padding:18px 10px;
+  color:#aaa;
+  font-size:10px;
+}
+
+/* DESKTOP */
 
 @media(min-width:700px){
-  #featuredProducts,
-  #publicProducts{
-    grid-template-columns:repeat(4,minmax(0,1fr))!important;
+  .products{
+    grid-template-columns:repeat(4,minmax(0,1fr));
+    gap:12px;
   }
 
-  .public-product-card .photo{
-    max-height:220px!important;
+  .photo{max-height:220px}
+
+  header{
+    padding-left:5%;
+    padding-right:5%;
   }
+
+  main,#dashboard{
+    max-width:1100px;
+    margin-left:auto;
+    margin-right:auto;
+  }
+
+  .panel{max-width:900px;margin:15px auto}
 }
+
 </style>
 </head>
+
 <body>
-<header>
- <div class="top"><div><div class="logo">SHOPIVA</div><div class="tagline">Your Marketplace, Your Style.</div></div></div>
- <input id="search" class="search" placeholder="Cari produk kegemaran anda..." oninput="renderCurrentPage()">
+
+<header id="storeHeader">
+  <div class="top">
+    <div>
+      <div class="logo">SHOPIVA</div>
+      <div class="tagline">Your Marketplace, Your Style.</div>
+    </div>
+  </div>
+
+  <input
+    id="search"
+    class="search"
+    type="search"
+    placeholder="Cari produk kegemaran anda..."
+    oninput="renderPublic()">
 </header>
 
+<!-- HOME PAGE -->
 <main id="homePage">
+
   <div class="section-title">Kategori Produk</div>
   <div class="categories" id="categoryGrid"></div>
 
-  <div class="section-title">Produk Pilihan SHOPIVA</div>
-  <div class="products" id="featuredProducts"></div>
+  <div id="featuredSection">
+    <div class="section-title">Produk Pilihan SHOPIVA</div>
+    <div class="products" id="featuredProducts"></div>
+  </div>
 
   <div class="section-title">Semua Produk</div>
   <div class="products" id="publicProducts"></div>
 
-  <div id="emptyProducts" class="hidden">
-    <p>Belum ada produk untuk dipaparkan.</p>
+  <div id="emptyProducts" class="empty hidden">
+    Belum ada produk untuk dipaparkan.
+  </div>
+
+</main>
+
+<!-- VIDEO PAGE -->
+<main id="videoPage" class="hidden">
+  <div class="video-feed" id="videoProducts"></div>
+</main>
+
+<!-- LIKED PAGE -->
+<main id="likedPage" class="hidden">
+  <div class="page-heading">Produk Disukai</div>
+  <div class="page-subtitle">Koleksi produk kegemaran anda.</div>
+  <div class="products" id="likedProducts"></div>
+  <div id="emptyLiked" class="empty hidden">
+    Belum ada produk disukai.
   </div>
 </main>
 
-<main id="videoPage" class="hidden"><div class="video-feed" id="videoProducts"></div></main>
-<main id="likedPage" class="hidden">
- <div class="page-heading">Produk Disukai</div><div class="page-subtitle">Koleksi produk kegemaran anda.</div>
- <div class="products" id="likedProducts"></div>
-</main>
+<!-- ME PAGE -->
 <main id="mePage" class="hidden">
- <div class="page-heading">Akaun Saya</div>
- <div class="me-card"><div class="me-avatar">S</div><div class="me-title">Selamat datang ke SHOPIVA</div>
- <div class="me-desc">Temui produk menarik daripada Shopee dan TikTok Shop. Simpan produk kegemaran dan terokai video produk.</div>
- <button class="me-button" onclick="openLogin()">Log Masuk Admin</button></div>
- <div class="me-card"><div class="me-title">Tentang SHOPIVA</div><div class="me-desc">SHOPIVA · Affiliate Marketplace</div></div>
+  <div class="page-heading">Akaun Saya</div>
+
+  <div class="me-card">
+    <div class="me-avatar">S</div>
+    <div class="me-title">Selamat datang ke SHOPIVA</div>
+    <div class="me-desc">
+      Temui produk menarik daripada Shopee dan TikTok Shop.
+      Simpan produk kegemaran dan terokai video produk.
+    </div>
+    <button class="me-button" onclick="openLogin()">
+      Log Masuk Admin
+    </button>
+  </div>
+
+  <div class="me-card">
+    <div class="me-title">Tentang SHOPIVA</div>
+    <div class="me-desc">SHOPIVA · Affiliate Marketplace</div>
+  </div>
 </main>
+
+<!-- LOGIN PANEL -->
 <section id="loginPanel" class="panel hidden">
- <h3>Admin SHOPIVA</h3><label class="field-label">Email admin</label>
- <input id="loginEmail" class="field" type="email" placeholder="Email admin">
- <label class="field-label">Password</label><input id="loginPassword" class="field" type="password" placeholder="Password">
- <button class="action" onclick="loginAdmin()">Log Masuk</button>
- <button class="action secondary" onclick="closeLogin()">Kembali</button><div id="loginMessage" class="message"></div>
+  <h3>Admin SHOPIVA</h3>
+
+  <label class="field-label">Email admin</label>
+  <input id="loginEmail" class="field" type="email"
+    placeholder="Email admin" autocomplete="username">
+
+  <label class="field-label">Password</label>
+  <input id="loginPassword" class="field" type="password"
+    placeholder="Password" autocomplete="current-password">
+
+  <button id="loginButton" class="action" onclick="loginAdmin()">
+    Log Masuk
+  </button>
+
+  <button class="action secondary" onclick="closeLogin()">
+    Kembali
+  </button>
+
+  <div id="loginMessage" class="message"></div>
 </section>
+
+<!-- ADMIN DASHBOARD -->
 <section id="dashboard" class="hidden">
- <div class="panel"><h3>Dashboard SHOPIVA</h3><div id="adminStats">Memuatkan statistik...</div>
- <button class="action secondary" onclick="backToStore()">Kembali ke Kedai</button>
- <button class="action secondary" onclick="logoutAdmin()">Log Keluar</button></div>
- <div class="panel" id="productFormPanel">
- <h3 id="formHeading">Tambah Produk Baharu</h3>
- <label class="field-label">Tajuk produk</label><input id="productTitle" class="field" placeholder="Nama produk">
- <label class="field-label">Harga (RM)</label><input id="productPrice" class="field" type="number" min="0" step="0.01" placeholder="29.90">
- <label class="field-label">Platform</label><select id="productPlatform" class="field"><option value="shopee">Shopee</option><option value="tiktok">TikTok Shop</option></select>
- <label class="field-label">Kategori</label><select id="productCategory" class="field">
- <option>Skincare</option><option>Kecantikan</option><option>Kesihatan</option><option>Fesyen</option><option>Elektronik</option><option>Rumah & Dapur</option><option>Ibu & Anak</option><option>Makanan & Minuman</option><option>Gajet</option><option>Lain-lain</option></select>
- <label class="field-label">Pautan affiliate</label><input id="productLink" class="field" type="url" placeholder="https://...">
- <label class="field-label">Gambar produk</label><input id="productImage" class="field" type="file" accept="image/jpeg,image/png,image/webp">
- <div id="currentImageNote" class="form-note"></div>
- <label class="field-label">Video produk (pilihan)</label><input id="productVideo" class="field" type="file" accept="video/mp4,video/webm">
- <div id="currentVideoNote" class="form-note"></div>
- <label class="field-label"><input id="productFeatured" type="checkbox"> Produk Pilihan SHOPIVA</label>
- <button class="action" id="saveProductButton" onclick="saveProduct()">Simpan Produk</button>
- <button class="action secondary hidden" id="cancelEditButton" onclick="cancelEdit()">Batal Edit</button>
- <div id="productMessage" class="message"></div></div>
- <div class="panel"><h3>Urus Produk</h3><div id="adminProducts">Memuatkan produk...</div></div>
+
+  <div class="panel">
+    <h3>Dashboard SHOPIVA</h3>
+    <div id="adminStats">Memuatkan statistik...</div>
+
+    <button class="action secondary" onclick="backToStore()">
+      Kembali ke Kedai
+    </button>
+
+    <button class="action secondary" onclick="logoutAdmin()">
+      Log Keluar
+    </button>
+  </div>
+
+  <!-- PRODUCT FORM -->
+  <div class="panel" id="productFormPanel">
+
+    <h3 id="formHeading">Tambah Produk Baharu</h3>
+
+    <label class="field-label">Tajuk produk</label>
+    <input id="productTitle" class="field"
+      placeholder="Nama produk">
+
+    <label class="field-label">Harga (RM)</label>
+    <input id="productPrice" class="field"
+      type="number" min="0.01" step="0.01"
+      placeholder="29.90">
+
+    <label class="field-label">Platform</label>
+    <select id="productPlatform" class="field">
+      <option value="shopee">Shopee</option>
+      <option value="tiktok">TikTok Shop</option>
+    </select>
+
+    <label class="field-label">Kategori</label>
+    <select id="productCategory" class="field">
+      <option>Skincare</option>
+      <option>Kecantikan</option>
+      <option>Kesihatan</option>
+      <option>Fesyen</option>
+      <option>Elektronik</option>
+      <option>Rumah & Dapur</option>
+      <option>Ibu & Anak</option>
+      <option>Makanan & Minuman</option>
+      <option>Gajet</option>
+      <option>Lain-lain</option>
+    </select>
+
+    <label class="field-label">Pautan affiliate</label>
+    <input id="productLink" class="field"
+      type="url" placeholder="https://...">
+
+    <label class="field-label">Gambar produk</label>
+    <input id="productImage" class="field"
+      type="file" accept="image/jpeg,image/png,image/webp">
+    <div id="currentImageNote" class="form-note"></div>
+    <div id="imagePreview"></div>
+
+    <label class="field-label">Video produk (pilihan)</label>
+    <input id="productVideo" class="field"
+      type="file" accept="video/mp4,video/webm">
+    <div id="currentVideoNote" class="form-note"></div>
+    <div id="videoPreview"></div>
+
+    <p>
+      <label class="field-label">
+        <input id="productFeatured" type="checkbox">
+        Produk Pilihan SHOPIVA
+      </label>
+    </p>
+
+    <button class="action" id="saveProductButton"
+      onclick="saveProduct()">
+      Simpan Produk
+    </button>
+
+    <button class="action secondary hidden"
+      id="cancelEditButton" onclick="cancelEdit()">
+      Batal Edit
+    </button>
+
+    <div id="productMessage" class="message"></div>
+
+  </div>
+
+  <!-- PRODUCT MANAGEMENT -->
+  <div class="panel">
+    <h3>Urus Produk</h3>
+    <div id="adminProducts">Memuatkan produk...</div>
+  </div>
+
 </section>
-<footer>SHOPIVA © 2026 · Affiliate Marketplace</footer>
+
+<footer id="storeFooter">
+  SHOPIVA © 2026 · Affiliate Marketplace
+</footer>
+
+<!-- BOTTOM NAVIGATION -->
 <nav class="bottom-nav" id="bottomNav">
- <button class="nav-item active" id="navHome" onclick="storeNav('home')"><span class="nav-icon">⌂</span>Home</button>
- <button class="nav-item" id="navVideo" onclick="storeNav('video')"><span class="nav-icon">▣</span>Video</button>
- <button class="nav-item" id="navLiked" onclick="storeNav('liked')"><span class="nav-icon">♡</span>Love</button>
- <button class="nav-item" id="navShare" onclick="shareShopiva()"><span class="nav-icon">↗</span>Share</button>
- <button class="nav-item" id="navMe" onclick="storeNav('me')"><span class="nav-icon">♙</span>Me</button>
+
+  <button class="nav-item active" id="navHome"
+    onclick="storeNav('home')">
+    <span class="nav-icon">⌂</span>Home
+  </button>
+
+  <button class="nav-item" id="navVideo"
+    onclick="storeNav('video')">
+    <span class="nav-icon">▣</span>Video
+  </button>
+
+  <button class="nav-item" id="navLiked"
+    onclick="storeNav('liked')">
+    <span class="nav-icon">♡</span>Love
+  </button>
+
+  <button class="nav-item" id="navShare"
+    onclick="shareShopiva()">
+    <span class="nav-icon">↗</span>Share
+  </button>
+
+  <button class="nav-item" id="navMe"
+    onclick="storeNav('me')">
+    <span class="nav-icon">♙</span>Me
+  </button>
+
 </nav>
+
 <script>
+
+/* BAHAGIAN 2 BERMULA DI SINI */
+
 /* =========================================
    SHOPIVA — PART 2
    SUPABASE, STOREFRONT, NAVIGATION & VIDEO
@@ -290,7 +890,7 @@ body.video-mode #videoPage{position:fixed;inset:0;width:100%;height:100dvh;displ
 
 /* SUPABASE CONFIG */
 const SUPABASE_URL = "https://komhhyccnlfwgndfbxnl.supabase.co";
-const SUPABASE_KEY = "sb_publishable__1YWZSsAo_oiMAXhQHcZbg_eqIQKN7U";
+const SUPABASE_KEY = "sb_publishable__1YWZSsAo_oiMAXhQhCZbg_eqIQKN7U";
 const ADMIN_UID = "e0fd7188-0904-4500-ac84-8ea21a22f6c5";
 
 const db = window.supabase.createClient(
@@ -301,14 +901,25 @@ const db = window.supabase.createClient(
 /* GLOBAL STATE */
 let currentUser = null;
 let currentPage = "home";
+
 let publicItems = [];
 let adminItems = [];
+
 let selectedCategory = "Semua";
-let likedProducts = JSON.parse(
-  localStorage.getItem("shopiva_likes") || "[]"
-);
-let likedOnly = false;
-let publicFilter = "all";
+let likedProducts = [];
+
+try{
+  const savedLikes = JSON.parse(
+    localStorage.getItem("shopiva_likes") || "[]"
+  );
+
+  likedProducts = Array.isArray(savedLikes)
+    ? savedLikes.map(String)
+    : [];
+}catch(error){
+  likedProducts = [];
+}
+
 let videoObserver = null;
 let videoTimers = [];
 let activeVideo = null;
@@ -320,7 +931,7 @@ const $ = id => document.getElementById(id);
 
 /* SAFE TEXT */
 function escapeHTML(value){
-  return String(value ?? "").replace(/[&<>"']/g, char => ({
+  return String(value ?? "").replace(/[&<>"']/g,char=>({
     "&":"&amp;",
     "<":"&lt;",
     ">":"&gt;",
@@ -333,24 +944,49 @@ function escapeHTML(value){
 function safeUrl(value){
   try{
     const url = new URL(value);
-    if(url.protocol === "https:" || url.protocol === "http:"){
+
+    if(
+      url.protocol === "https:" ||
+      url.protocol === "http:"
+    ){
       return url.href;
     }
   }catch(error){}
+
   return "";
 }
 
 /* CURRENCY */
 function money(value){
-  return "RM " + Number(value || 0).toFixed(2);
+  const number = Number(value || 0);
+
+  return "RM " + number.toFixed(2);
+}
+
+/* MESSAGE */
+function showMessage(id,message,type="error"){
+  const element = $(id);
+
+  if(!element) return;
+
+  element.textContent = message;
+
+  element.className =
+    type === "success"
+      ? "message success-message"
+      : "message";
 }
 
 /* LIKES */
 function saveLikes(){
-  localStorage.setItem(
-    "shopiva_likes",
-    JSON.stringify(likedProducts)
-  );
+  try{
+    localStorage.setItem(
+      "shopiva_likes",
+      JSON.stringify(likedProducts)
+    );
+  }catch(error){
+    console.error("Save likes:",error);
+  }
 }
 
 function isLiked(id){
@@ -361,18 +997,15 @@ function toggleLike(id){
   id = String(id);
 
   if(isLiked(id)){
-    likedProducts = likedProducts.filter(x => x !== id);
+    likedProducts = likedProducts.filter(
+      item=>item !== id
+    );
   }else{
     likedProducts.push(id);
   }
 
   saveLikes();
-
-  if(currentPage === "liked"){
-    renderPublic();
-  }else{
-    renderPublic();
-  }
+  renderPublic();
 }
 
 /* SHARE */
@@ -386,16 +1019,41 @@ async function shareShopiva(){
   try{
     if(navigator.share){
       await navigator.share(shareData);
-    }else{
-      await navigator.clipboard.writeText(window.location.href);
+    }else if(navigator.clipboard?.writeText){
+      await navigator.clipboard.writeText(
+        window.location.href
+      );
+
       alert("Pautan SHOPIVA berjaya disalin.");
+    }else{
+      prompt("Salin pautan SHOPIVA:",window.location.href);
     }
   }catch(error){
-    console.log("Share dibatalkan:",error);
+    if(error.name !== "AbortError"){
+      console.error("Share:",error);
+    }
   }
 }
 
 /* NAVIGATION */
+function hideStorePages(){
+  [
+    "homePage",
+    "videoPage",
+    "likedPage",
+    "mePage",
+    "loginPanel",
+    "dashboard"
+  ].forEach(id=>{
+    const element = $(id);
+
+    if(element){
+      element.classList.add("hidden");
+      element.style.display = "none";
+    }
+  });
+}
+
 function storeNav(page){
   currentPage = page;
 
@@ -419,61 +1077,45 @@ function storeNav(page){
     $(navMap[page]).classList.add("active");
   }
 
-  const sections = [
-    "homePage",
-    "videoPage",
-    "likedPage",
-    "mePage",
-    "categoriesPage"
-  ];
-
-  sections.forEach(id=>{
-  const el = $(id);
-  if(el){
-    el.style.display = "none";
-  }
-});
-
-/* HIDE ADMIN PANELS WHEN USING STORE NAVIGATION */
-["loginPanel","dashboard"].forEach(id=>{
-  const el = $(id);
-  if(el){
-    el.classList.add("hidden");
-    el.style.display = "none";
-  }
-});
-
   if(page !== "video"){
     stopAllFeedVideos();
   }
 
+  hideStorePages();
+
   if(page === "home"){
-    if($("homePage")) $("homePage").style.display = "block";
+    $("homePage").classList.remove("hidden");
+    $("homePage").style.display = "block";
+
+    renderCategories();
     renderPublic();
   }
 
   if(page === "video"){
-    if($("videoPage")) $("videoPage").style.display = "block";
+    $("videoPage").classList.remove("hidden");
+    $("videoPage").style.display = "block";
+
     renderVideoFeed();
   }
 
   if(page === "liked"){
-    if($("likedPage")) $("likedPage").style.display = "block";
+    $("likedPage").classList.remove("hidden");
+    $("likedPage").style.display = "block";
+
     renderPublic();
   }
 
   if(page === "me"){
-    if($("mePage")) $("mePage").style.display = "block";
+    $("mePage").classList.remove("hidden");
+    $("mePage").style.display = "block";
+
     renderMePage();
   }
 
-  if(page === "categories"){
-    if($("categoriesPage")) $("categoriesPage").style.display = "block";
-    renderCategories();
-  }
+  window.scrollTo(0,0);
 }
 
-/* CATEGORY LIST */
+/* CATEGORIES */
 const SHOPIVA_CATEGORIES = [
   "Semua",
   "Kecantikan",
@@ -488,135 +1130,216 @@ const SHOPIVA_CATEGORIES = [
   "Lain-lain"
 ];
 
+function categoryIcon(category){
+  const icons = {
+    "Semua":"🛍️",
+    "Kecantikan":"💄",
+    "Skincare":"🧴",
+    "Kesihatan":"🌿",
+    "Fesyen":"👗",
+    "Elektronik":"📱",
+    "Rumah & Dapur":"🏠",
+    "Ibu & Anak":"🍼",
+    "Makanan & Minuman":"🍜",
+    "Gajet":"🎧",
+    "Lain-lain":"✨"
+  };
+
+  return icons[category] || "✨";
+}
+
 function renderCategories(){
   const container = $("categoryGrid");
+
   if(!container) return;
 
   container.innerHTML = SHOPIVA_CATEGORIES.map(category=>`
-    <button class="category-tile"
+    <button
+      class="cat ${selectedCategory === category ? "active" : ""}"
       onclick="selectCategory('${escapeHTML(category)}')">
-      <span>${category === "Semua" ? "🛍️" :
-        category === "Kecantikan" ? "💄" :
-        category === "Skincare" ? "🧴" :
-        category === "Kesihatan" ? "🌿" :
-        category === "Fesyen" ? "👗" :
-        category === "Elektronik" ? "📱" :
-        category === "Rumah & Dapur" ? "🏠" :
-        category === "Ibu & Anak" ? "🍼" :
-        category === "Makanan & Minuman" ? "🍜" :
-        category === "Gajet" ? "🎧" : "✨"}</span>
-      <small>${escapeHTML(category)}</small>
+      ${categoryIcon(category)}
+      ${escapeHTML(category)}
     </button>
   `).join("");
 }
 
 function selectCategory(category){
   selectedCategory = category;
+
   storeNav("home");
 }
-
 
 /* PRODUCT CARD */
 function card(product,manage=false){
   const image = safeUrl(product.image_url);
-  const video = safeUrl(product.video_url);
   const liked = isLiked(product.id);
-  const title = product.title || "";
 
-  const media = video
-    ? `<video src="${video}" muted playsinline preload="metadata"></video>`
-    : image
-      ? `<img src="${image}" alt="${escapeHTML(title)}" loading="lazy">`
-      : `<div class="no-image">SHOPIVA</div>`;
+  const title = product.title || "Produk SHOPIVA";
+
+  const media = image
+    ? `<img
+        src="${image}"
+        alt="${escapeHTML(title)}"
+        loading="lazy">`
+    : `<div class="no-image">SHOPIVA</div>`;
 
   return `
     <article class="public-product-card">
+
       <div class="photo">
+
         ${media}
 
         ${product.is_featured ? `
-          <span class="featured-label">PILIHAN SHOPIVA</span>
+          <span class="featured-label">
+            PILIHAN SHOPIVA
+          </span>
         ` : ""}
 
         ${!manage ? `
-          <button class="like-btn ${liked ? "liked" : ""}"
-            onclick="toggleLike('${product.id}')">
+          <button
+            class="like-btn ${liked ? "liked" : ""}"
+            onclick="toggleLike('${product.id}')"
+            aria-label="Simpan produk">
+
             ${liked ? "♥" : "♡"}
+
           </button>
         ` : ""}
+
       </div>
 
       <div class="product-info">
-        <h3>${escapeHTML(title)}</h3>
-        <div class="product-price">${money(product.price)}</div>
 
-        ${manage ? "" : `
-          <button class="buy-button"
+        <h3>${escapeHTML(title)}</h3>
+
+        <div class="product-price">
+          ${money(product.price)}
+        </div>
+
+        ${!manage ? `
+          <button
+            class="buy-button"
             onclick="openProduct('${product.id}')">
+
             Lihat Produk
+
           </button>
-        `}
+        ` : ""}
+
       </div>
+
     </article>
   `;
 }
 
-
-
-/* RENDER PUBLIC PRODUCTS */
-function renderPublic(){
+/* SEARCH FILTER */
+function getFilteredProducts(){
   let items = [...publicItems];
 
-  items = items.filter(product=>product.is_active !== false);
+  items = items.filter(
+    product=>product.is_active !== false
+  );
 
   if(currentPage === "liked"){
-    items = items.filter(product=>isLiked(product.id));
+    items = items.filter(
+      product=>isLiked(product.id)
+    );
   }
 
   if(selectedCategory !== "Semua"){
-    items = items.filter(product=>
-      product.category === selectedCategory
+    items = items.filter(
+      product=>product.category === selectedCategory
     );
   }
 
-  if(likedOnly){
-    items = items.filter(product=>isLiked(product.id));
-  }
+  const search = $("search");
 
-  const search = $("productSearch");
   if(search && search.value.trim()){
-    const term = search.value.toLowerCase().trim();
+    const term = search.value.trim().toLowerCase();
+
     items = items.filter(product=>
-      String(product.title || "").toLowerCase().includes(term)
+      String(product.title || "")
+        .toLowerCase()
+        .includes(term)
     );
   }
 
-  const featured = items.filter(product=>product.is_featured);
-  const regular = items.filter(product=>!product.is_featured);
+  return items;
+}
+
+/* RENDER PRODUCTS */
+function renderPublic(){
+  const items = getFilteredProducts();
 
   const featuredContainer = $("featuredProducts");
-  const productContainer = $("publicProducts");
+  const regularContainer = $("publicProducts");
+  const likedContainer = $("likedProducts");
+
+  const featuredSection = $("featuredSection");
+
+  if(currentPage === "liked"){
+
+    if(featuredSection){
+      featuredSection.classList.add("hidden");
+    }
+
+    if(regularContainer){
+      regularContainer.innerHTML = "";
+    }
+
+    if(featuredContainer){
+      featuredContainer.innerHTML = "";
+    }
+
+    if(likedContainer){
+      likedContainer.innerHTML =
+        items.map(product=>card(product)).join("");
+    }
+
+    const emptyLiked = $("emptyLiked");
+
+    if(emptyLiked){
+      emptyLiked.classList.toggle(
+        "hidden",
+        items.length > 0
+      );
+    }
+
+    return;
+  }
+
+  if(featuredSection){
+    featuredSection.classList.remove("hidden");
+  }
+
+  const featured = items.filter(
+    product=>product.is_featured === true
+  );
+
+  const regular = items.filter(
+    product=>product.is_featured !== true
+  );
 
   if(featuredContainer){
-    featuredContainer.innerHTML = featured.map(p=>card(p)).join("");
+    featuredContainer.innerHTML =
+      featured.map(product=>card(product)).join("");
   }
- alert(
-  "FEATURED: " + featured.length +
-  "\nREGULAR: " + regular.length +
-  "\nPUBLIC CONTAINER: " + !!productContainer +
-  "\nCARD HTML: " + regular.map(p=>card(p)).join("").length
-);
 
-  if(productContainer){
-    productContainer.innerHTML = regular.map(p=>card(p)).join("");
+  if(regularContainer){
+    regularContainer.innerHTML =
+      regular.map(product=>card(product)).join("");
   }
 
   const empty = $("emptyProducts");
+
   if(empty){
-    empty.style.display = items.length ? "none" : "block";
+    empty.classList.toggle(
+      "hidden",
+      items.length > 0
+    );
   }
 }
-
 
 /* OPEN AFFILIATE PRODUCT */
 async function openProduct(id){
@@ -626,20 +1349,36 @@ async function openProduct(id){
 
   if(!product) return;
 
-  try{
-    await db.from("product_clicks").insert({
-      product_id:product.id
-    });
-  }catch(error){
-    console.log("Click tracking:",error);
-  }
-
   const link = safeUrl(product.affiliate_link);
 
-  if(link){
-    window.open(link,"_blank","noopener,noreferrer");
-  }else{
-    alert("Pautan produk belum tersedia.");
+  if(!link){
+    alert("Pautan affiliate belum tersedia.");
+    return;
+  }
+
+  /* Open link immediately after user click */
+  const newWindow = window.open(
+    link,
+    "_blank",
+    "noopener,noreferrer"
+  );
+
+  try{
+    const {error} = await db
+      .from("product_clicks")
+      .insert({
+        product_id:product.id
+      });
+
+    if(error){
+      console.error("Click tracking:",error);
+    }
+  }catch(error){
+    console.error("Click tracking:",error);
+  }
+
+  if(!newWindow){
+    alert("Jika pautan tidak terbuka, sila benarkan pop-up browser.");
   }
 }
 
@@ -657,32 +1396,51 @@ async function loadProducts(){
 
     publicItems = data || [];
 
-console.log("SHOPIVA DATA:", data);
-console.log("JUMLAH PRODUK:", publicItems.length);
-alert("SHOPIVA berjaya membaca " + publicItems.length + " produk.");
+    renderCategories();
     renderPublic();
+
+    if(currentPage === "video"){
+      renderVideoFeed();
+    }
+
+    console.log(
+      "SHOPIVA products loaded:",
+      publicItems.length
+    );
+
+    return true;
+
   }catch(error){
     console.error("Load products:",error);
-    alert("Tidak berjaya memuatkan produk. Sila cuba semula.");
-  }
-}
 
-/* SEARCH */
-if($("productSearch")){
-  $("productSearch").addEventListener("input",renderPublic);
+    publicItems = [];
+
+    renderPublic();
+
+    showMessage(
+      "loginMessage",
+      "Gagal memuatkan produk: " + error.message
+    );
+
+    return false;
+  }
 }
 
 /* =========================================
    SHOPIVA FULLSCREEN VIDEO FEED
 ========================================= */
 
+/* STOP VIDEOS */
 function stopAllFeedVideos(){
   if(videoObserver){
     videoObserver.disconnect();
     videoObserver = null;
   }
 
-  videoTimers.forEach(timer=>clearTimeout(timer));
+  videoTimers.forEach(timer=>{
+    clearTimeout(timer);
+  });
+
   videoTimers = [];
 
   document.querySelectorAll(".feed-video").forEach(video=>{
@@ -693,12 +1451,12 @@ function stopAllFeedVideos(){
   activeVideo = null;
 }
 
-
 /* CREATE VIDEO FEED */
 function renderVideoFeed(){
   stopAllFeedVideos();
 
-  const feed = $("videoFeed");
+  const feed = $("videoProducts");
+
   if(!feed) return;
 
   const videos = publicItems.filter(product=>
@@ -714,11 +1472,14 @@ function renderVideoFeed(){
         <p>Video produk akan dipaparkan di sini.</p>
       </div>
     `;
+
     return;
   }
 
   feed.innerHTML = videos.map(product=>`
-    <section class="video-slide" data-product="${product.id}">
+    <section
+      class="video-slide"
+      data-product="${product.id}">
 
       <video
         class="feed-video"
@@ -732,42 +1493,59 @@ function renderVideoFeed(){
 
       <div class="video-overlay"></div>
 
-      <button class="video-sound"
-        onclick="toggleVideoSound(this)">
-        🔇
+      <button
+        class="video-sound"
+        onclick="toggleVideoSound(this)"
+        aria-label="Bunyi video">
+
+        ${videoSoundOn ? "🔊" : "🔇"}
+
       </button>
 
       <div class="video-details">
+
         <h3>${escapeHTML(product.title || "")}</h3>
+
         <p>${money(product.price)}</p>
 
-        <button class="video-buy"
+        <button
+          class="video-buy"
           onclick="openProduct('${product.id}')">
+
           Lihat Produk
+
         </button>
+
       </div>
 
       <div class="video-progress"></div>
+
     </section>
   `).join("");
 
   startVideoObserver();
 }
 
-
-/* AUTOPLAY WHEN VISIBLE */
+/* VIDEO INTERSECTION OBSERVER */
 function startVideoObserver(){
-  const feed = $("videoFeed");
+  const feed = $("videoProducts");
+
   if(!feed) return;
 
   videoObserver = new IntersectionObserver(entries=>{
+
     entries.forEach(entry=>{
-      const video = entry.target.querySelector(".feed-video");
+
       const slide = entry.target;
+      const video = slide.querySelector(".feed-video");
+      const buyButton = slide.querySelector(".video-buy");
 
       if(!video) return;
 
-      if(entry.isIntersecting && entry.intersectionRatio >= 0.6){
+      if(
+        entry.isIntersecting &&
+        entry.intersectionRatio >= 0.6
+      ){
 
         document.querySelectorAll(".feed-video").forEach(other=>{
           if(other !== video){
@@ -775,34 +1553,48 @@ function startVideoObserver(){
           }
         });
 
+        document.querySelectorAll(".video-buy").forEach(button=>{
+          button.classList.remove("show");
+        });
+
         activeVideo = video;
 
         video.muted = !videoSoundOn;
 
         const playPromise = video.play();
+
         if(playPromise){
           playPromise.catch(error=>{
-            console.log("Autoplay:",error);
+            console.log("Video autoplay:",error);
           });
         }
 
-        const buyButton = slide.querySelector(".video-buy");
-        if(buyButton){
-          buyButton.style.opacity = "0";
-          buyButton.style.pointerEvents = "none";
+        const timer = setTimeout(()=>{
 
-          const timer = setTimeout(()=>{
-            buyButton.style.opacity = "1";
-            buyButton.style.pointerEvents = "auto";
-          },3000);
+          if(
+            activeVideo === video &&
+            currentPage === "video" &&
+            buyButton
+          ){
+            buyButton.classList.add("show");
+          }
 
-          videoTimers.push(timer);
-        }
+        },3000);
+
+        videoTimers.push(timer);
 
       }else{
+
         video.pause();
+
+        if(buyButton){
+          buyButton.classList.remove("show");
+        }
+
       }
+
     });
+
   },{
     root:feed,
     threshold:[0,0.6,1]
@@ -829,30 +1621,99 @@ function toggleVideoSound(button){
     activeVideo.play().catch(()=>{});
   }
 }
-/* END PART 2 — PART 3 CONTINUES BELOW */
- 
+
+/* END PART 2 */
+
+/* BAHAGIAN 3 BERMULA DI SINI */
+
 /* =========================================
    SHOPIVA — PART 3
    ADMIN LOGIN, DASHBOARD & PRODUCT MANAGEMENT
 ========================================= */
 
-/* ADMIN LOGIN */
+/* ADMIN CHECK */
+function requireAdmin(){
+  if(
+    !currentUser ||
+    currentUser.id !== ADMIN_UID
+  ){
+    alert("Akses admin diperlukan.");
+    return false;
+  }
+
+  return true;
+}
+
+/* OPEN LOGIN */
+function openLogin(){
+  stopAllFeedVideos();
+
+  document.body.classList.remove("video-mode");
+
+  hideStorePages();
+
+  $("loginPanel").classList.remove("hidden");
+  $("loginPanel").style.display = "block";
+
+  $("loginEmail").value = "";
+  $("loginPassword").value = "";
+
+  showMessage("loginMessage","");
+
+  window.scrollTo(0,0);
+}
+
+/* SHOW LOGIN */
+function showLogin(){
+  document.body.classList.remove("video-mode");
+
+  hideStorePages();
+
+  $("loginPanel").classList.remove("hidden");
+  $("loginPanel").style.display = "block";
+
+  window.scrollTo(0,0);
+}
+
+/* CLOSE LOGIN */
+function closeLogin(){
+  $("loginPanel").classList.add("hidden");
+  $("loginPanel").style.display = "none";
+
+  storeNav("me");
+}
+
+/* BACK TO STORE */
+function backToStore(){
+  $("dashboard").classList.add("hidden");
+  $("dashboard").style.display = "none";
+
+  storeNav("home");
+}
+
+/* LOGIN ADMIN */
 async function loginAdmin(){
-  const email = $("loginEmail")?.value.trim();
-  const password = $("loginPassword")?.value;
+
+  const email = $("loginEmail").value.trim();
+  const password = $("loginPassword").value;
 
   if(!email || !password){
-    alert("Sila masukkan email dan password.");
+    showMessage(
+      "loginMessage",
+      "Sila masukkan email dan password."
+    );
     return;
   }
 
   const button = $("loginButton");
-  if(button){
-    button.disabled = true;
-    button.textContent = "Sedang log masuk...";
-  }
+
+  button.disabled = true;
+  button.textContent = "Sedang log masuk...";
+
+  showMessage("loginMessage","");
 
   try{
+
     const {data,error} = await db.auth.signInWithPassword({
       email,
       password
@@ -860,124 +1721,150 @@ async function loginAdmin(){
 
     if(error) throw error;
 
-    if(data.user.id !== ADMIN_UID){
+    if(!data.user || data.user.id !== ADMIN_UID){
+
       await db.auth.signOut();
-      throw new Error("Akaun ini bukan akaun admin SHOPIVA.");
+
+      currentUser = null;
+
+      throw new Error(
+        "Akaun ini bukan akaun admin SHOPIVA."
+      );
     }
 
     currentUser = data.user;
-    showDashboard();
+
+    await showDashboard();
 
   }catch(error){
-    alert("Log masuk gagal: " + error.message);
+
+    console.error("Admin login:",error);
+
+    showMessage(
+      "loginMessage",
+      "Log masuk gagal: " + error.message
+    );
+
   }finally{
-    if(button){
-      button.disabled = false;
-      button.textContent = "Log Masuk";
-    }
-  }
-}
 
+    button.disabled = false;
+    button.textContent = "Log Masuk";
 
-/* SHOW LOGIN */
-function showLogin(){
-  const login = $("loginPanel");
-  const dashboard = $("dashboard");
-
-  if(login){
-    login.classList.remove("hidden");
-    login.style.display = "block";
-  }
-
-  if(dashboard){
-    dashboard.classList.add("hidden");
-    dashboard.style.display = "none";
   }
 }
 
 /* SHOW DASHBOARD */
 async function showDashboard(){
-  if(!currentUser || currentUser.id !== ADMIN_UID){
+
+  if(!requireAdmin()){
     showLogin();
     return;
   }
 
-  const login = $("loginPanel");
+  stopAllFeedVideos();
+
+  document.body.classList.remove("video-mode");
+
+  hideStorePages();
+
   const dashboard = $("dashboard");
 
-  if(login){
-    login.classList.add("hidden");
-    login.style.display = "none";
-  }
+  dashboard.classList.remove("hidden");
+  dashboard.style.display = "block";
 
-  if(dashboard){
-    dashboard.classList.remove("hidden");
-    dashboard.style.display = "block";
-  }
+  window.scrollTo(0,0);
 
   await loadAdminProducts();
   await loadAdminStats();
-}
 
+}
 
 /* LOGOUT */
 async function logoutAdmin(){
-  const confirmLogout = confirm("Anda pasti mahu log keluar?");
-  if(!confirmLogout) return;
+
+  if(!requireAdmin()) return;
+
+  const confirmed = confirm(
+    "Anda pasti mahu log keluar?"
+  );
+
+  if(!confirmed) return;
 
   stopAllFeedVideos();
 
-  const {error} = await db.auth.signOut();
+  try{
 
-  if(error){
-    alert("Tidak berjaya log keluar: " + error.message);
-    return;
+    const {error} = await db.auth.signOut();
+
+    if(error) throw error;
+
+    currentUser = null;
+
+    editingProductId = null;
+
+    resetProductForm();
+
+    storeNav("home");
+
+    alert("Anda telah log keluar.");
+
+  }catch(error){
+
+    alert(
+      "Tidak berjaya log keluar: " +
+      error.message
+    );
+
   }
-
-  currentUser = null;
-  showLogin();
 }
 
-/* ADMIN CHECK */
-function requireAdmin(){
-  if(!currentUser || currentUser.id !== ADMIN_UID){
-    alert("Akses admin diperlukan.");
-    return false;
-  }
-  return true;
-}
+/* =========================================
+   FILE UPLOAD
+========================================= */
 
-/* UPLOAD IMAGE / VIDEO */
 async function uploadFile(file,bucket){
+
   if(!file) return null;
 
   if(!requireAdmin()) return null;
 
-  const allowedTypes = bucket === "product-videos"
-    ? ["video/mp4","video/webm","video/quicktime"]
+  const isVideo = bucket === "product-videos";
+
+  const allowedTypes = isVideo
+    ? ["video/mp4","video/webm"]
     : ["image/jpeg","image/png","image/webp"];
 
   if(!allowedTypes.includes(file.type)){
-    throw new Error("Format fail tidak disokong.");
+    throw new Error(
+      "Format fail tidak disokong."
+    );
   }
 
-  const maxSize = bucket === "product-videos"
+  const maxSize = isVideo
     ? 100 * 1024 * 1024
     : 5 * 1024 * 1024;
 
   if(file.size > maxSize){
+
     throw new Error(
-      bucket === "product-videos"
+      isVideo
         ? "Video melebihi had 100MB."
         : "Gambar melebihi had 5MB."
     );
+
   }
 
-  const extension = file.name.split(".").pop().toLowerCase();
+  const extension = file.name
+    .split(".")
+    .pop()
+    .toLowerCase();
+
   const filePath =
-    Date.now() + "-" +
+    Date.now() +
+    "-" +
     Math.random().toString(36).slice(2,10) +
-    "." + extension;
+    "." +
+    extension;
 
   const {error:uploadError} = await db.storage
     .from(bucket)
@@ -987,7 +1874,9 @@ async function uploadFile(file,bucket){
       contentType:file.type
     });
 
-  if(uploadError) throw uploadError;
+  if(uploadError){
+    throw uploadError;
+  }
 
   const {data} = db.storage
     .from(bucket)
@@ -996,56 +1885,99 @@ async function uploadFile(file,bucket){
   return data.publicUrl;
 }
 
-/* IMAGE PREVIEW */
+/* =========================================
+   IMAGE PREVIEW
+========================================= */
+
+let imagePreviewUrl = null;
+let videoPreviewUrl = null;
+
 if($("productImage")){
+
   $("productImage").addEventListener("change",event=>{
+
     const file = event.target.files?.[0];
+
     const preview = $("imagePreview");
 
-    if(!preview) return;
+    if(imagePreviewUrl){
+      URL.revokeObjectURL(imagePreviewUrl);
+      imagePreviewUrl = null;
+    }
 
     if(!file){
       preview.innerHTML = "";
       return;
     }
 
-    const localUrl = URL.createObjectURL(file);
+    if(!file.type.startsWith("image/")){
+      alert("Sila pilih fail gambar.");
+      event.target.value = "";
+      return;
+    }
+
+    imagePreviewUrl = URL.createObjectURL(file);
 
     preview.innerHTML = `
-      <img src="${localUrl}"
-        style="width:100px;height:100px;object-fit:cover;border-radius:12px">
+      <img
+        class="preview-image"
+        src="${imagePreviewUrl}"
+        alt="Preview gambar">
     `;
+
   });
+
 }
 
 /* VIDEO PREVIEW */
 if($("productVideo")){
+
   $("productVideo").addEventListener("change",event=>{
+
     const file = event.target.files?.[0];
+
     const preview = $("videoPreview");
 
-    if(!preview) return;
+    if(videoPreviewUrl){
+      URL.revokeObjectURL(videoPreviewUrl);
+      videoPreviewUrl = null;
+    }
 
     if(!file){
       preview.innerHTML = "";
       return;
     }
 
-    const localUrl = URL.createObjectURL(file);
+    if(!file.type.startsWith("video/")){
+      alert("Sila pilih fail video.");
+      event.target.value = "";
+      return;
+    }
+
+    videoPreviewUrl = URL.createObjectURL(file);
 
     preview.innerHTML = `
-      <video src="${localUrl}" controls playsinline
-        style="width:150px;max-height:180px;border-radius:12px">
+      <video
+        class="preview-video"
+        src="${videoPreviewUrl}"
+        controls
+        playsinline>
       </video>
     `;
+
   });
+
 }
 
-/* RESET PRODUCT FORM */
+/* =========================================
+   RESET PRODUCT FORM
+========================================= */
+
 function resetProductForm(){
+
   editingProductId = null;
 
-  [
+  const fields = [
     "productTitle",
     "productPrice",
     "productPlatform",
@@ -1054,127 +1986,255 @@ function resetProductForm(){
     "productImage",
     "productVideo",
     "productFeatured"
-  ].forEach(id=>{
-    const el = $(id);
-    if(!el) return;
+  ];
 
-    if(el.type === "checkbox"){
-      el.checked = false;
+  fields.forEach(id=>{
+
+    const element = $(id);
+
+    if(!element) return;
+
+    if(element.type === "checkbox"){
+      element.checked = false;
     }else{
-      el.value = "";
+      element.value = "";
     }
+
   });
 
-  if($("imagePreview")) $("imagePreview").innerHTML = "";
-  if($("videoPreview")) $("videoPreview").innerHTML = "";
-
-  if($("saveProductButton")){
-    $("saveProductButton").textContent = "Tambah Produk";
+  if($("imagePreview")){
+    $("imagePreview").innerHTML = "";
   }
+
+  if($("videoPreview")){
+    $("videoPreview").innerHTML = "";
+  }
+
+  if($("currentImageNote")){
+    $("currentImageNote").textContent = "";
+  }
+
+  if($("currentVideoNote")){
+    $("currentVideoNote").textContent = "";
+  }
+
+  if(imagePreviewUrl){
+    URL.revokeObjectURL(imagePreviewUrl);
+    imagePreviewUrl = null;
+  }
+
+  if(videoPreviewUrl){
+    URL.revokeObjectURL(videoPreviewUrl);
+    videoPreviewUrl = null;
+  }
+
+  $("formHeading").textContent = "Tambah Produk Baharu";
+
+  $("saveProductButton").textContent = "Simpan Produk";
+
+  $("cancelEditButton").classList.add("hidden");
+
+  showMessage("productMessage","");
 }
 
-/* ADD / UPDATE PRODUCT */
-async function addProduct(){
+/* CANCEL EDIT */
+function cancelEdit(){
+  resetProductForm();
+}
+
+/* =========================================
+   ADD / UPDATE PRODUCT
+========================================= */
+
+async function saveProduct(){
+
   if(!requireAdmin()) return;
 
-  const name = $("productTitle")?.value.trim();
-  const price = Number($("productPrice")?.value);
-  const platform = $("productPlatform")?.value;
-  const category = $("productCategory")?.value;
-  const affiliateLink = $("productLink")?.value.trim();
+  const title = $("productTitle").value.trim();
 
-  if(!name || !price || price <= 0 || !affiliateLink){
-    alert("Sila lengkapkan nama, harga dan pautan produk.");
+  const price = Number($("productPrice").value);
+
+  const platform = $("productPlatform").value;
+
+  const category = $("productCategory").value;
+
+  const affiliateLink = $("productLink").value.trim();
+
+  const featured = $("productFeatured").checked;
+
+  if(!title){
+    alert("Sila masukkan tajuk produk.");
+    return;
+  }
+
+  if(!Number.isFinite(price) || price <= 0){
+    alert("Sila masukkan harga produk yang sah.");
+    return;
+  }
+
+  const validLink = safeUrl(affiliateLink);
+
+  if(!validLink){
+    alert("Sila masukkan pautan affiliate yang sah (https://).");
     return;
   }
 
   const button = $("saveProductButton");
 
-  if(button){
-    button.disabled = true;
-    button.textContent = "Menyimpan...";
-  }
+  button.disabled = true;
+
+  button.textContent = "Sedang menyimpan...";
 
   try{
-    const imageFile = $("productImage")?.files?.[0];
-    const videoFile = $("productVideo")?.files?.[0];
 
-    let imageUrl = "";
-    let videoUrl = "";
+    const imageFile =
+      $("productImage").files?.[0];
+
+    const videoFile =
+      $("productVideo").files?.[0];
+
+    let imageUrl = null;
+    let videoUrl = null;
+
+    /* KEEP EXISTING MEDIA WHEN EDITING */
 
     if(editingProductId){
+
       const existing = adminItems.find(
-        p=>String(p.id) === String(editingProductId)
+        product=>
+          String(product.id) === String(editingProductId)
       );
 
-      imageUrl = existing?.image_url || "";
-      videoUrl = existing?.video_url || "";
+      if(!existing){
+        throw new Error(
+          "Produk yang ingin diedit tidak dijumpai."
+        );
+      }
+
+      imageUrl = existing.image_url || null;
+
+      videoUrl = existing.video_url || null;
+
     }
+
+    /* UPLOAD NEW IMAGE */
 
     if(imageFile){
-      imageUrl = await uploadFile(imageFile,"product-images");
+
+      imageUrl = await uploadFile(
+        imageFile,
+        "product-images"
+      );
+
     }
+
+    /* UPLOAD NEW VIDEO */
 
     if(videoFile){
-      videoUrl = await uploadFile(videoFile,"product-videos");
+
+      videoUrl = await uploadFile(
+        videoFile,
+        "product-videos"
+      );
+
     }
 
+    /* DATABASE DATA */
+
     const productData = {
-      name,
-      price,
-      platform,
-      category,
-      affiliate_link:affiliateLink,
-      image_url:imageUrl || null,
-      video_url:videoUrl || null,
-      is_featured:$("productFeatured")?.checked || false,
+
+      title:title,
+
+      price:price,
+
+      platform:platform,
+
+      category:category,
+
+      affiliate_link:validLink,
+
+      image_url:imageUrl,
+
+      video_url:videoUrl,
+
+      is_featured:featured,
+
       is_active:true
+
     };
 
     let result;
 
     if(editingProductId){
+
       result = await db
         .from("products")
         .update(productData)
         .eq("id",editingProductId);
+
     }else{
+
       result = await db
         .from("products")
         .insert(productData);
+
     }
 
-    if(result.error) throw result.error;
+    if(result.error){
+      throw result.error;
+    }
 
-    alert(editingProductId
-      ? "Produk berjaya dikemaskini!"
-      : "Produk berjaya ditambah!"
+    const wasEditing = !!editingProductId;
+
+    alert(
+      wasEditing
+        ? "Produk berjaya dikemaskini!"
+        : "Produk berjaya ditambah!"
     );
 
     resetProductForm();
 
     await loadProducts();
+
     await loadAdminProducts();
+
     await loadAdminStats();
 
   }catch(error){
+
     console.error("Save product:",error);
-    alert("Tidak berjaya menyimpan produk: " + error.message);
+
+    alert(
+      "Tidak berjaya menyimpan produk: " +
+      error.message
+    );
+
   }finally{
-    if(button){
-      button.disabled = false;
-      button.textContent = editingProductId
-        ? "Kemaskini Produk"
-        : "Tambah Produk";
-    }
+
+    button.disabled = false;
+
+    button.textContent = editingProductId
+      ? "Kemaskini Produk"
+      : "Simpan Produk";
+
   }
+
 }
 
-/* LOAD ADMIN PRODUCTS */
+/* =========================================
+   LOAD ADMIN PRODUCTS
+========================================= */
+
 async function loadAdminProducts(){
+
   if(!requireAdmin()) return;
 
+  const container = $("adminProducts");
+
+  container.textContent = "Memuatkan produk...";
+
   try{
+
     const {data,error} = await db
       .from("products")
       .select("*")
@@ -1184,87 +2244,156 @@ async function loadAdminProducts(){
 
     adminItems = data || [];
 
-    const container = $("adminProducts");
-    if(!container) return;
-
     if(!adminItems.length){
-      container.innerHTML = "<p>Belum ada produk.</p>";
+
+      container.innerHTML = `
+        <p class="empty">
+          Belum ada produk.
+        </p>
+      `;
+
       return;
     }
 
     container.innerHTML = adminItems.map(product=>`
+
       <div class="admin-product-row">
+
         <div class="admin-product-image">
+
           ${
             safeUrl(product.image_url)
               ? `<img src="${safeUrl(product.image_url)}" alt="">`
               : "📦"
           }
+
         </div>
 
         <div class="admin-product-info">
-  <strong>${escapeHTML(product.title || "")}</strong>
-  <p>${money(product.price)}</p>
-  <small>${escapeHTML(product.platform || "")}</small>
-  <small>${product.is_active ? "Aktif" : "Tidak aktif"}</small>
-</div>
+
+          <strong>
+            ${escapeHTML(product.title || "Tanpa tajuk")}
+          </strong>
+
+          <p>${money(product.price)}</p>
+
+          <small>
+            ${escapeHTML(product.platform || "")}
+          </small>
+
+          <small>
+            ${product.is_active ? "Aktif" : "Tidak aktif"}
+          </small>
+
+        </div>
 
         <div class="admin-product-actions">
-          <button onclick="editProduct('${product.id}')">Edit</button>
-          <button onclick="deleteProduct('${product.id}')">Padam</button>
+
+          <button onclick="editProduct('${product.id}')">
+            Edit
+          </button>
+
+          <button onclick="deleteProduct('${product.id}')">
+            Padam
+          </button>
+
         </div>
+
       </div>
+
     `).join("");
 
   }catch(error){
+
     console.error("Admin products:",error);
-    alert("Gagal memuatkan senarai produk: " + error.message);
+
+    container.innerHTML = `
+      <p class="message">
+        Gagal memuatkan produk: ${escapeHTML(error.message)}
+      </p>
+    `;
+
   }
+
 }
 
-/* EDIT PRODUCT */
+/* =========================================
+   EDIT PRODUCT
+========================================= */
+
 function editProduct(id){
+
   if(!requireAdmin()) return;
 
   const product = adminItems.find(
-    p=>String(p.id) === String(id)
+    item=>String(item.id) === String(id)
   );
 
-  if(!product) return;
+  if(!product){
+    alert("Produk tidak dijumpai.");
+    return;
+  }
 
   editingProductId = product.id;
 
-  if($("productTitle")) $("productTitle").value = product.name || "";
-  if($("productPrice")) $("productPrice").value = product.price || "";
-  if($("productPlatform")) $("productPlatform").value = product.platform || "";
-  if($("productCategory")) $("productCategory").value = product.category || "";
-  if($("productLink")) $("productLink").value = product.affiliate_link || "";
-  if($("productFeatured")) $("productFeatured").checked = !!product.is_featured;
+  $("productTitle").value = product.title || "";
 
-  if($("productImage")) $("productImage").value = "";
-  if($("productVideo")) $("productVideo").value = "";
+  $("productPrice").value = product.price || "";
 
-  if($("imagePreview")){
-    $("imagePreview").innerHTML = product.image_url
-      ? `<img src="${safeUrl(product.image_url)}" style="width:100px;height:100px;object-fit:cover;border-radius:12px">`
+  $("productPlatform").value = product.platform || "shopee";
+
+  $("productCategory").value = product.category || "Lain-lain";
+
+  $("productLink").value = product.affiliate_link || "";
+
+  $("productFeatured").checked =
+    product.is_featured === true;
+
+  $("productImage").value = "";
+
+  $("productVideo").value = "";
+
+  $("imagePreview").innerHTML =
+    safeUrl(product.image_url)
+      ? `<img class="preview-image" src="${safeUrl(product.image_url)}" alt="Gambar sedia ada">`
       : "";
-  }
 
-  if($("videoPreview")){
-    $("videoPreview").innerHTML = product.video_url
-      ? `<video src="${safeUrl(product.video_url)}" controls playsinline style="width:150px;max-height:180px;border-radius:12px"></video>`
+  $("videoPreview").innerHTML =
+    safeUrl(product.video_url)
+      ? `<video class="preview-video" src="${safeUrl(product.video_url)}" controls playsinline></video>`
       : "";
-  }
 
-  if($("saveProductButton")){
-    $("saveProductButton").textContent = "Kemaskini Produk";
-  }
+  $("currentImageNote").textContent =
+    product.image_url
+      ? "Gambar sedia ada. Pilih gambar baharu jika mahu menggantikannya."
+      : "Belum ada gambar.";
 
-  window.scrollTo({top:0,behavior:"smooth"});
+  $("currentVideoNote").textContent =
+    product.video_url
+      ? "Video sedia ada. Pilih video baharu jika mahu menggantikannya."
+      : "Belum ada video.";
+
+  $("formHeading").textContent = "Kemaskini Produk";
+
+  $("saveProductButton").textContent = "Kemaskini Produk";
+
+  $("cancelEditButton").classList.remove("hidden");
+
+  showMessage("productMessage","");
+
+  $("productFormPanel").scrollIntoView({
+    behavior:"smooth",
+    block:"start"
+  });
+
 }
 
-/* DELETE PRODUCT */
+/* =========================================
+   DELETE PRODUCT
+========================================= */
+
 async function deleteProduct(id){
+
   if(!requireAdmin()) return;
 
   const confirmed = confirm(
@@ -1274,6 +2403,7 @@ async function deleteProduct(id){
   if(!confirmed) return;
 
   try{
+
     const {error} = await db
       .from("products")
       .delete()
@@ -1281,148 +2411,343 @@ async function deleteProduct(id){
 
     if(error) throw error;
 
+    if(String(editingProductId) === String(id)){
+      resetProductForm();
+    }
+
     alert("Produk berjaya dipadam.");
 
     await loadProducts();
+
     await loadAdminProducts();
+
     await loadAdminStats();
 
   }catch(error){
-    alert("Gagal memadam produk: " + error.message);
+
+    console.error("Delete product:",error);
+
+    alert(
+      "Gagal memadam produk: " +
+      error.message
+    );
+
   }
+
 }
 
-/* DASHBOARD STATISTICS */
+/* =========================================
+   DASHBOARD STATISTICS
+========================================= */
+
 async function loadAdminStats(){
+
   if(!requireAdmin()) return;
 
-  try{
-    const [productsResult,clicksResult,salesResult] =
-      await Promise.all([
-        db.from("products").select("id,is_active"),
-        db.from("product_clicks").select("id"),
-        db.from("affiliate_sales").select("*")
-      ]);
+  const container = $("adminStats");
 
-    if(productsResult.error) throw productsResult.error;
-    if(clicksResult.error) throw clicksResult.error;
-    if(salesResult.error) throw salesResult.error;
+  container.textContent = "Memuatkan statistik...";
+
+  try{
+
+    const [
+      productsResult,
+      clicksResult,
+      salesResult
+    ] = await Promise.all([
+
+      db.from("products")
+        .select("id,is_active"),
+
+      db.from("product_clicks")
+        .select("id"),
+
+      db.from("affiliate_sales")
+        .select("id")
+
+    ]);
+
+    if(productsResult.error){
+      throw productsResult.error;
+    }
+
+    if(clicksResult.error){
+      throw clicksResult.error;
+    }
+
+    if(salesResult.error){
+      throw salesResult.error;
+    }
 
     const products = productsResult.data || [];
+
     const clicks = clicksResult.data || [];
+
     const sales = salesResult.data || [];
 
     const activeCount = products.filter(
-      p=>p.is_active !== false
+      product=>product.is_active !== false
     ).length;
 
-    const setText = (id,value)=>{
-      if($(id)) $(id).textContent = value;
-    };
+    container.innerHTML = `
 
-    setText("statProducts",products.length);
-    setText("statActiveProducts",activeCount);
-    setText("statClicks",clicks.length);
-    setText("statSales",sales.length);
+      <div class="stats-grid">
+
+        <div class="stat-card">
+          <small>Jumlah Produk</small>
+          <strong>${products.length}</strong>
+        </div>
+
+        <div class="stat-card">
+          <small>Produk Aktif</small>
+          <strong>${activeCount}</strong>
+        </div>
+
+        <div class="stat-card">
+          <small>Jumlah Klik</small>
+          <strong>${clicks.length}</strong>
+        </div>
+
+        <div class="stat-card">
+          <small>Rekod Jualan</small>
+          <strong>${sales.length}</strong>
+        </div>
+
+      </div>
+
+    `;
 
   }catch(error){
+
     console.error("Dashboard stats:",error);
+
+    container.innerHTML = `
+      <p class="message">
+        Statistik tidak dapat dimuatkan:
+        ${escapeHTML(error.message)}
+      </p>
+    `;
+
   }
+
 }
 
-/* ME PAGE */
+/* =========================================
+   ME PAGE
+========================================= */
+
 function renderMePage(){
+
   const container = $("mePage");
+
   if(!container) return;
 
-  if(currentUser && currentUser.id === ADMIN_UID){
+  if(
+    currentUser &&
+    currentUser.id === ADMIN_UID
+  ){
+
     container.innerHTML = `
-      <div class="me-panel">
-        <h2>Admin SHOPIVA</h2>
-        <p>${escapeHTML(currentUser.email || "")}</p>
-        <button onclick="showDashboard()">Dashboard Admin</button>
-        <button onclick="logoutAdmin()">Log Keluar</button>
+
+      <div class="me-card">
+
+        <div class="me-avatar">S</div>
+
+        <div class="me-title">
+          Admin SHOPIVA
+        </div>
+
+        <div class="me-desc">
+          ${escapeHTML(currentUser.email || "")}
+        </div>
+
+        <button
+          class="me-button"
+          onclick="showDashboard()">
+
+          Dashboard Admin
+
+        </button>
+
+        <button
+          class="action secondary"
+          onclick="logoutAdmin()">
+
+          Log Keluar
+
+        </button>
+
       </div>
+
     `;
+
   }else{
+
     container.innerHTML = `
-      <div class="me-panel">
-        <h2>Selamat datang ke SHOPIVA</h2>
-        <p>Platform pilihan produk affiliate.</p>
-        <button onclick="showLogin()">Admin Login</button>
+
+      <div class="me-card">
+
+        <div class="me-avatar">S</div>
+
+        <div class="me-title">
+          Selamat datang ke SHOPIVA
+        </div>
+
+        <div class="me-desc">
+          Platform pilihan produk affiliate.
+        </div>
+
+        <button
+          class="me-button"
+          onclick="openLogin()">
+
+          Admin Login
+
+        </button>
+
       </div>
+
+      <div class="me-card">
+
+        <div class="me-title">
+          Tentang SHOPIVA
+        </div>
+
+        <div class="me-desc">
+          SHOPIVA · Affiliate Marketplace
+        </div>
+
+      </div>
+
     `;
+
   }
+
 }
 
-/* AUTH STATE */
+/* =========================================
+   AUTH INITIALIZATION
+========================================= */
+
 async function initShopiva(){
+
   try{
+
     const {data,error} = await db.auth.getSession();
 
     if(error) throw error;
 
     const session = data.session;
 
-    if(session && session.user.id === ADMIN_UID){
+    if(
+      session &&
+      session.user.id === ADMIN_UID
+    ){
+
       currentUser = session.user;
-      showDashboard();
+
+      await loadProducts();
+
+      await showDashboard();
+
     }else{
+
       if(session){
         await db.auth.signOut();
       }
 
       currentUser = null;
-      showLogin();
-    }
 
-    await loadProducts();
+      await loadProducts();
 
-    if(currentPage === "video"){
-      renderVideoFeed();
+      storeNav("home");
+
     }
 
   }catch(error){
+
     console.error("SHOPIVA initialization:",error);
-    showLogin();
+
+    currentUser = null;
+
+    await loadProducts();
+
+    storeNav("home");
+
   }
+
 }
 
+/* =========================================
+   AUTH STATE LISTENER
+========================================= */
 
-/* AUTH LISTENER */
-db.auth.onAuthStateChange((event, session)=>{
+db.auth.onAuthStateChange((event,session)=>{
 
   if(event === "SIGNED_OUT"){
+
     currentUser = null;
-    showLogin();
-    renderMePage();
+
+    setTimeout(()=>{
+
+      if(currentPage !== "home"){
+        storeNav("home");
+      }
+
+      renderMePage();
+
+    },0);
+
   }
 
   if(event === "SIGNED_IN" && session){
 
     if(session.user.id === ADMIN_UID){
+
       currentUser = session.user;
-      showDashboard();
-      renderMePage();
-    }else{
-      currentUser = null;
-      showLogin();
 
       setTimeout(()=>{
-        db.auth.signOut().catch(error=>{
-          console.error("SHOPIVA logout:",error);
-        });
+
+        showDashboard();
+
+        renderMePage();
+
       },0);
+
+    }else{
+
+      currentUser = null;
+
+      setTimeout(async()=>{
+
+        try{
+          await db.auth.signOut();
+        }catch(error){
+          console.error("SHOPIVA logout:",error);
+        }
+
+        alert(
+          "Akaun ini bukan akaun admin SHOPIVA."
+        );
+
+        storeNav("home");
+
+      },0);
+
     }
+
   }
 
 });
 
-/* START SHOPIVA */
+/* =========================================
+   START SHOPIVA
+========================================= */
+
 initShopiva();
 
 /* END SHOPIVA */
-
 </script>
+
 </body>
 </html>
