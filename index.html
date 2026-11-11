@@ -373,16 +373,18 @@ function selectCategory(category){
   storeNav("home");
 }
 
+
 /* PRODUCT CARD */
 function card(product,manage=false){
   const image = safeUrl(product.image_url);
   const video = safeUrl(product.video_url);
   const liked = isLiked(product.id);
+  const title = product.title || "";
 
   const media = video
     ? `<video src="${video}" muted playsinline preload="metadata"></video>`
     : image
-      ? `<img src="${image}" alt="${escapeHTML(product.name)}" loading="lazy">`
+      ? `<img src="${image}" alt="${escapeHTML(title)}" loading="lazy">`
       : `<div class="no-image">SHOPIVA</div>`;
 
   return `
@@ -403,7 +405,7 @@ function card(product,manage=false){
       </div>
 
       <div class="product-info">
-        <h3>${escapeHTML(product.name)}</h3>
+        <h3>${escapeHTML(title)}</h3>
         <div class="product-price">${money(product.price)}</div>
 
         ${manage ? "" : `
@@ -416,6 +418,8 @@ function card(product,manage=false){
     </article>
   `;
 }
+
+
 
 /* RENDER PUBLIC PRODUCTS */
 function renderPublic(){
@@ -441,7 +445,7 @@ function renderPublic(){
   if(search && search.value.trim()){
     const term = search.value.toLowerCase().trim();
     items = items.filter(product=>
-      String(product.name || "").toLowerCase().includes(term)
+      String(product.title || "").toLowerCase().includes(term)
     );
   }
 
@@ -464,6 +468,7 @@ function renderPublic(){
     empty.style.display = items.length ? "none" : "block";
   }
 }
+
 
 /* OPEN AFFILIATE PRODUCT */
 async function openProduct(id){
@@ -537,6 +542,7 @@ function stopAllFeedVideos(){
   activeVideo = null;
 }
 
+
 /* CREATE VIDEO FEED */
 function renderVideoFeed(){
   stopAllFeedVideos();
@@ -581,7 +587,7 @@ function renderVideoFeed(){
       </button>
 
       <div class="video-details">
-        <h3>${escapeHTML(product.name)}</h3>
+        <h3>${escapeHTML(product.title || "")}</h3>
         <p>${money(product.price)}</p>
 
         <button class="video-buy"
@@ -596,6 +602,7 @@ function renderVideoFeed(){
 
   startVideoObserver();
 }
+
 
 /* AUTOPLAY WHEN VISIBLE */
 function startVideoObserver(){
