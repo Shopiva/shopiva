@@ -508,9 +508,10 @@ async function loadProducts(){
     if(error) throw error;
 
     publicItems = data || [];
-   console.log("SHOPIVA PRODUCTS:", publicItems);
-console.log("JUMLAH PRODUK:", publicItems.length);
 
+console.log("SHOPIVA DATA:", data);
+console.log("JUMLAH PRODUK:", publicItems.length);
+alert("SHOPIVA berjaya membaca " + publicItems.length + " produk.");
     renderPublic();
   }catch(error){
     console.error("Load products:",error);
