@@ -867,10 +867,21 @@ async function loginAdmin(){
   }
 }
 
+
 /* SHOW LOGIN */
 function showLogin(){
-  if($("loginPanel")) $("loginPanel").style.display = "block";
-  if($("dashboard")) $("dashboard").style.display = "none";
+  const login = $("loginPanel");
+  const dashboard = $("dashboard");
+
+  if(login){
+    login.classList.remove("hidden");
+    login.style.display = "block";
+  }
+
+  if(dashboard){
+    dashboard.classList.add("hidden");
+    dashboard.style.display = "none";
+  }
 }
 
 /* SHOW DASHBOARD */
@@ -880,12 +891,23 @@ async function showDashboard(){
     return;
   }
 
-  if($("loginPanel")) $("loginPanel").style.display = "none";
-  if($("dashboard")) $("dashboard").style.display = "block";
+  const login = $("loginPanel");
+  const dashboard = $("dashboard");
+
+  if(login){
+    login.classList.add("hidden");
+    login.style.display = "none";
+  }
+
+  if(dashboard){
+    dashboard.classList.remove("hidden");
+    dashboard.style.display = "block";
+  }
 
   await loadAdminProducts();
   await loadAdminStats();
 }
+
 
 /* LOGOUT */
 async function logoutAdmin(){
