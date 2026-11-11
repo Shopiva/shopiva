@@ -1208,25 +1208,41 @@ async function initShopiva(){
   }
 }
 
+
 /* AUTH LISTENER */
-db.auth.onAuthStateChange((event,session)=>{
+db.auth.onAuthStateChange((event, session)=>{
+
   if(event === "SIGNED_OUT"){
     currentUser = null;
     showLogin();
+    renderMePage();
   }
 
   if(event === "SIGNED_IN" && session){
+
     if(session.user.id === ADMIN_UID){
       currentUser = session.user;
       showDashboard();
+      renderMePage();
     }else{
-      db.auth.signOut();
+      currentUser = null;
+      showLogin();
+
+      setTimeout(()=>{
+        db.auth.signOut().catch(error=>{
+          console.error("SHOPIVA logout:",error);
+        });
+      },0);
     }
   }
+
 });
 
+/* START SHOPIVA */
+initShopiva();
 
 /* END SHOPIVA */
+
 </script>
 </body>
 </html>
