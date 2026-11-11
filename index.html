@@ -458,10 +458,12 @@ function renderPublic(){
   if(featuredContainer){
     featuredContainer.innerHTML = featured.map(p=>card(p)).join("");
   }
- console.log("FEATURED:", featured.length);
-console.log("REGULAR:", regular.length);
-console.log("PUBLIC CONTAINER:", !!productContainer);
-console.log("CARD HTML:", regular.map(p=>card(p)).join("").length);
+ alert(
+  "FEATURED: " + featured.length +
+  "\nREGULAR: " + regular.length +
+  "\nPUBLIC CONTAINER: " + !!productContainer +
+  "\nCARD HTML: " + regular.map(p=>card(p)).join("").length
+);
 
   if(productContainer){
     productContainer.innerHTML = regular.map(p=>card(p)).join("");
