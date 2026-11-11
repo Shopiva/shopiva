@@ -97,11 +97,22 @@ body.video-mode #videoPage{position:fixed;inset:0;width:100%;height:100dvh;displ
  <div class="top"><div><div class="logo">SHOPIVA</div><div class="tagline">Your Marketplace, Your Style.</div></div></div>
  <input id="search" class="search" placeholder="Cari produk kegemaran anda..." oninput="renderCurrentPage()">
 </header>
+
 <main id="homePage">
- <div class="section-title">Kategori Produk</div><div class="categories" id="categories"></div>
- <div class="section-title">Produk Pilihan SHOPIVA</div><div class="products" id="featured"></div>
- <div class="section-title">Semua Produk</div><div class="products" id="products"></div>
+  <div class="section-title">Kategori Produk</div>
+  <div class="categories" id="categoryGrid"></div>
+
+  <div class="section-title">Produk Pilihan SHOPIVA</div>
+  <div class="products" id="featuredProducts"></div>
+
+  <div class="section-title">Semua Produk</div>
+  <div class="products" id="publicProducts"></div>
+
+  <div id="emptyProducts" class="hidden">
+    <p>Belum ada produk untuk dipaparkan.</p>
+  </div>
 </main>
+
 <main id="videoPage" class="hidden"><div class="video-feed" id="videoProducts"></div></main>
 <main id="likedPage" class="hidden">
  <div class="page-heading">Produk Disukai</div><div class="page-subtitle">Koleksi produk kegemaran anda.</div>
