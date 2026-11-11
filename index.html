@@ -1209,34 +1209,20 @@ async function initShopiva(){
 }
 
 /* AUTH LISTENER */
-db.auth.onAuthStateChange((event, session)=>{
-
+db.auth.onAuthStateChange((event,session)=>{
   if(event === "SIGNED_OUT"){
     currentUser = null;
     showLogin();
   }
 
   if(event === "SIGNED_IN" && session){
-
     if(session.user.id === ADMIN_UID){
-
       currentUser = session.user;
       showDashboard();
-
     }else{
-
-      currentUser = null;
-      showLogin();
-
-      setTimeout(()=>{
-        db.auth.signOut().catch(error=>{
-          console.error("SHOPIVA logout:",error);
-        });
-      },0);
-
+      db.auth.signOut();
     }
   }
-
 });
 
 
