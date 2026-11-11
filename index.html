@@ -885,36 +885,42 @@ footer{
 
 </nav>
 
+
 <script>
-  /* =====================================================
-   SHOPIVA — PART 2 OF 3
-   CORE FUNCTIONS, PRODUCT DISPLAY & VIDEO FEED
+/* =====================================================
+   SHOPIVA — FIXED JAVASCRIPT
+   Compatible with the HTML supplied by user
 ===================================================== */
 
-/* SUPABASE CONFIG */
+/* SUPABASE */
 const SUPABASE_URL = "https://komhhyccnlfwgndfbxnl.supabase.co";
 const SUPABASE_KEY = "sb_publishable__1YWZSsAo_oiMAXhQHcZbg_eqIQKN7U";
 const ADMIN_UID = "e0fd7188-0904-4500-ac84-8ea21a22f6c5";
 
-const db = window.supabase.createClient(
-  SUPABASE_URL,
-  SUPABASE_KEY
-);
+const db = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
-/* GLOBAL STATE */
+/* STATE */
 let currentUser = null;
 let publicItems = [];
 let currentCategory = "Semua";
 let searchTerm = "";
-let likedProducts = JSON.parse(localStorage.getItem("shopiva_likes") || "[]");
-let currentVideoIndex = 0;
+let likedProducts = [];
+
+try {
+  likedProducts = JSON.parse(localStorage.getItem("shopiva_likes") || "[]");
+  if (!Array.isArray(likedProducts)) likedProducts = [];
+} catch(e) {
+  likedProducts = [];
+}
+
 let videoObserver = null;
 let activeFeedVideos = [];
+let currentVideoIndex = 0;
 
-/* HELPER */
+/* HELPERS */
 const $ = id => document.getElementById(id);
 
-function escapeHTML(value){
+function escapeHTML(value) {
   return String(value ?? "").replace(/[&<>"']/g, char => ({
     "&":"&amp;",
     "<":"&lt;",
@@ -924,631 +930,621 @@ function escapeHTML(value){
   })[char]);
 }
 
-function safeUrl(value){
-  try{
+function safeUrl(value) {
+  try {
     const url = new URL(String(value || "").trim());
-    return ["http:","https:"].includes(url.protocol) ? url.href : "";
-  }catch(e){
+    return ["http:", "https:"].includes(url.protocol) ? url.href : "";
+  } catch(e) {
     return "";
   }
 }
 
-function money(value){
-  const number = Number(value || 0);
-  return "RM " + number.toFixed(2);
+function money(value) {
+  return "RM " + Number(value || 0).toFixed(2);
 }
 
-function showMessage(message){
+function showMessage(message) {
   alert(message);
 }
 
-/* LIKE SYSTEM */
-function saveLikes(){
-  localStorage.setItem("shopiva_likes",JSON.stringify(likedProducts));
+function setVisible(element, visible) {
+  if (!element) return;
+  element.classList.toggle("hidden", !visible);
+  element.style.display = visible ? "" : "none";
 }
 
-function toggleLike(id){
-  if(likedProducts.includes(id)){
+/* LIKES */
+function saveLikes() {
+  localStorage.setItem("shopiva_likes", JSON.stringify(likedProducts));
+}
+
+function isLiked(id) {
+  return likedProducts.includes(String(id));
+}
+
+function toggleLike(id) {
+  id = String(id);
+
+  if (isLiked(id)) {
     likedProducts = likedProducts.filter(item => item !== id);
-  }else{
+  } else {
     likedProducts.push(id);
   }
 
   saveLikes();
-  renderPublicProducts();
+  renderPublic();
 }
 
-function isLiked(id){
-  return likedProducts.includes(id);
+function renderLiked() {
+  const container = $("likedProducts");
+  const empty = $("emptyLiked");
+  if (!container) return;
+
+  const products = publicItems.filter(product =>
+    product.is_active !== false && isLiked(product.id)
+  );
+
+  container.innerHTML = products.map(product => card(product)).join("");
+  setVisible(empty, products.length === 0);
 }
 
 /* SHARE */
-async function shareShopiva(){
+async function shareShopiva() {
   const shareData = {
-    title:"SHOPIVA",
-    text:"Jom lihat produk pilihan di SHOPIVA!",
-    url:window.location.href
+    title: "SHOPIVA",
+    text: "Jom lihat produk pilihan di SHOPIVA!",
+    url: window.location.href
   };
 
-  if(navigator.share){
-    try{
+  if (navigator.share) {
+    try {
       await navigator.share(shareData);
-    }catch(e){}
-  }else{
-    try{
+    } catch(e) {}
+  } else {
+    try {
       await navigator.clipboard.writeText(window.location.href);
       showMessage("Pautan SHOPIVA berjaya disalin.");
-    }catch(e){
+    } catch(e) {
       showMessage(window.location.href);
     }
   }
 }
 
-/* NAVIGATION */
-function storeNav(page){
-  document.querySelectorAll(".page-section").forEach(section=>{
-    section.style.display = "none";
+/* PAGE NAVIGATION */
+function hideAllStorePages() {
+  ["homePage", "videoPage", "likedPage", "mePage"].forEach(id => {
+    const element = $(id);
+    if (element) element.classList.add("hidden");
+  });
+}
+
+function setActiveNav(page) {
+  const map = {
+    home: "navHome",
+    video: "navVideo",
+    liked: "navLiked",
+    me: "navMe"
+  };
+
+  ["navHome", "navVideo", "navLiked", "navShare", "navMe"].forEach(id => {
+    const element = $(id);
+    if (element) element.classList.remove("active");
   });
 
-  const target = $("page-" + page);
-  if(target) target.style.display = "block";
-
-  document.querySelectorAll(".bottom-nav-item").forEach(item=>{
-    item.classList.toggle(
-      "active",
-      item.dataset.page === page
-    );
-  });
-
-  if(page === "liked"){
-    currentCategory = "Semua";
-    renderPublicProducts(true);
-  }
-
-  if(page === "home"){
-    renderPublicProducts();
-  }
-
-  if(page === "video"){
-    document.body.classList.add("video-mode");
-    renderVideoFeed();
-  }else{
-    document.body.classList.remove("video-mode");
-    stopAllFeedVideos();
+  if (map[page] && $(map[page])) {
+    $(map[page]).classList.add("active");
   }
 }
 
-function hideStorePages(){
-  document.querySelectorAll(".page-section").forEach(section=>{
-    section.style.display = "none";
-  });
+function storeNav(page) {
+  const dashboard = $("dashboard");
+  if (dashboard) setVisible(dashboard, false);
+
+  const login = $("loginPanel");
+  if (login) setVisible(login, false);
+
+  hideAllStorePages();
+
+  const header = $("storeHeader");
+  const footer = $("storeFooter");
+  const nav = $("bottomNav");
+
+  if (header) header.style.display = "";
+  if (footer) footer.style.display = "";
+  if (nav) nav.style.display = "";
+
+  document.body.classList.toggle("video-mode", page === "video");
+
+  if (page === "home") {
+    setVisible($("homePage"), true);
+    renderPublic();
+  }
+
+  if (page === "video") {
+    setVisible($("videoPage"), true);
+    renderVideoFeed();
+  } else {
+    stopAllFeedVideos();
+  }
+
+  if (page === "liked") {
+    setVisible($("likedPage"), true);
+    renderLiked();
+  }
+
+  if (page === "me") {
+    setVisible($("mePage"), true);
+    renderMePage();
+  }
+
+  setActiveNav(page);
+}
+
+function backToStore() {
+  storeNav("home");
 }
 
 /* SEARCH */
-function handleSearch(value){
-  searchTerm = String(value || "").toLowerCase().trim();
-  renderPublicProducts();
+function renderPublic() {
+  const input = $("search");
+  searchTerm = String(input?.value || "").toLowerCase().trim();
+
+  const products = publicItems.filter(product => {
+    if (product.is_active === false) return false;
+
+    const matchesCategory =
+      currentCategory === "Semua" ||
+      product.category === currentCategory;
+
+    const matchesSearch =
+      !searchTerm ||
+      String(product.title || "").toLowerCase().includes(searchTerm);
+
+    return matchesCategory && matchesSearch;
+  });
+
+  const featured = products.filter(product => product.is_featured);
+  const featuredSection = $("featuredSection");
+  const featuredContainer = $("featuredProducts");
+  const publicContainer = $("publicProducts");
+  const empty = $("emptyProducts");
+
+  if (featuredContainer) {
+    featuredContainer.innerHTML = featured.map(product => card(product)).join("");
+  }
+
+  setVisible(featuredSection, featured.length > 0);
+
+  if (publicContainer) {
+    publicContainer.innerHTML = products.map(product => card(product)).join("");
+  }
+
+  setVisible(empty, products.length === 0);
+
+  renderLiked();
 }
 
 /* CATEGORY */
-function selectCategory(category){
-  currentCategory = category || "Semua";
-  renderPublicProducts();
+function renderCategories() {
+  const container = $("categoryGrid");
+  if (!container) return;
 
-  const searchInput = $("searchInput");
-  if(searchInput) searchInput.value = "";
+  const categories = [
+    "Semua",
+    "Skincare",
+    "Kecantikan",
+    "Kesihatan",
+    "Fesyen",
+    "Elektronik",
+    "Rumah & Dapur",
+    "Ibu & Anak",
+    "Makanan & Minuman",
+    "Gajet",
+    "Lain-lain"
+  ];
+
+  container.innerHTML = categories.map(category => `
+    <button
+      class="cat ${currentCategory === category ? "active" : ""}"
+      onclick="selectCategory('${escapeHTML(category)}')"
+    >${escapeHTML(category)}</button>
+  `).join("");
+}
+
+function selectCategory(category) {
+  currentCategory = category;
+  renderCategories();
+
+  if ($("search")) $("search").value = "";
+
   searchTerm = "";
-
   storeNav("home");
 }
 
 /* PRODUCT CARD */
-function card(product,manage=false){
-
+function card(product) {
   const id = escapeHTML(product.id);
   const title = escapeHTML(product.title || "Produk");
-  const price = money(product.price);
   const image = safeUrl(product.image_url);
   const video = safeUrl(product.video_url);
-  const affiliate = safeUrl(product.affiliate_url);
 
-  let mediaHTML = "";
+  let media = "";
 
-  if(image){
-    mediaHTML = `
-      <img
-        src="${image}"
-        alt="${title}"
-        loading="lazy"
-        onerror="this.style.display='none'"
-      >
+  if (image) {
+    media = `
+      <img src="${image}" alt="${title}" loading="lazy"
+        onerror="this.style.display='none'">
     `;
-  }else if(video){
-    mediaHTML = `
-      <video
-        class="product-card-video"
-        src="${video}"
-        muted
-        autoplay
-        loop
-        playsinline
-        preload="metadata"
-      ></video>
+  } else if (video) {
+    media = `
+      <video src="${video}" muted autoplay loop playsinline
+        preload="metadata"></video>
     `;
-  }else{
-    mediaHTML = `
-      <div class="product-placeholder">
-        <span>📦</span>
-      </div>
-    `;
+  } else {
+    media = `<div class="no-image">📦</div>`;
   }
-
-  const featured = product.is_featured
-    ? `<span class="featured-badge">PILIHAN SHOPIVA</span>`
-    : "";
-
-  const likeButton = !manage ? `
-    <button
-      class="like-btn ${isLiked(product.id) ? "liked" : ""}"
-      onclick="event.stopPropagation();toggleLike('${id}')"
-      aria-label="Sukai produk"
-    >♥</button>
-  ` : "";
-
-  const buyButton = !manage ? `
-    <button
-      class="product-buy-btn"
-      onclick="openProduct('${id}')"
-    >Lihat Produk</button>
-  ` : "";
 
   return `
     <article class="public-product-card">
       <div class="photo">
-        ${mediaHTML}
-        ${featured}
-        ${likeButton}
+        ${media}
+        ${product.is_featured
+          ? `<span class="featured-label">PILIHAN SHOPIVA</span>`
+          : ""}
+        <button
+          class="like-btn ${isLiked(product.id) ? "liked" : ""}"
+          onclick="event.stopPropagation();toggleLike('${id}')"
+        >♥</button>
       </div>
 
-      <div class="product-card-info">
-        <div class="product-card-title">${title}</div>
-        <div class="product-card-price">${price}</div>
-        ${buyButton}
+      <div class="product-info">
+        <h3>${title}</h3>
+        <div class="product-price">${money(product.price)}</div>
+        <button class="buy-button" onclick="openProduct('${id}')">
+          Lihat Produk
+        </button>
       </div>
     </article>
   `;
 }
 
-/* PUBLIC PRODUCT FILTER */
-function getFilteredProducts(likedOnly=false){
+/* AFFILIATE LINK */
+function openProduct(id) {
+  const product = publicItems.find(item => String(item.id) === String(id));
 
-  return publicItems.filter(product=>{
-
-    if(product.is_active === false) return false;
-
-    if(likedOnly && !isLiked(product.id)) return false;
-
-    if(
-      currentCategory !== "Semua" &&
-      product.category !== currentCategory
-    ) return false;
-
-    if(
-      searchTerm &&
-      !String(product.title || "")
-        .toLowerCase()
-        .includes(searchTerm)
-    ) return false;
-
-    return true;
-  });
-}
-
-/* RENDER PRODUCTS */
-function renderPublicProducts(likedOnly=false){
-
-  const products = getFilteredProducts(likedOnly);
-
-  const container = $("publicProducts");
-  if(!container) return;
-
-  if(!products.length){
-    container.innerHTML = `
-      <div class="empty-products">
-        <p>Tiada produk ditemui.</p>
-      </div>
-    `;
-    return;
-  }
-
-  container.innerHTML = products.map(product=>card(product)).join("");
-}
-
-/* OPEN AFFILIATE PRODUCT */
-function openProduct(id){
-
-  const product = publicItems.find(item=>String(item.id) === String(id));
-
-  if(!product){
+  if (!product) {
     showMessage("Produk tidak dijumpai.");
     return;
   }
 
   const link = safeUrl(product.affiliate_url);
 
-  if(!link){
+  if (!link) {
     showMessage("Pautan affiliate produk belum tersedia.");
     return;
   }
 
-  window.open(link,"_blank","noopener,noreferrer");
+  window.open(link, "_blank", "noopener,noreferrer");
 }
 
 /* LOAD PRODUCTS */
-async function loadProducts(){
-
-  try{
-
-    const {data,error} = await db
+async function loadProducts() {
+  try {
+    const { data, error } = await db
       .from("products")
       .select("*")
-      .eq("is_active",true)
-      .order("sort_order",{ascending:true})
-      .order("created_at",{ascending:false});
+      .order("sort_order", { ascending: true })
+      .order("created_at", { ascending: false });
 
-    if(error) throw error;
+    if (error) throw error;
 
     publicItems = data || [];
 
-    renderPublicProducts();
-    renderVideoFeed();
+    renderCategories();
+    renderPublic();
 
-    if(typeof renderAdminProducts === "function" && currentUser){
-      renderAdminProducts();
-    }
+    if (currentUser) renderAdminProducts();
 
-  }catch(error){
-
-    console.error("LOAD PRODUCTS ERROR:",error);
+    return true;
+  } catch(error) {
+    console.error("LOAD PRODUCTS ERROR:", error);
     showMessage("Gagal memuatkan produk: " + error.message);
-
+    return false;
   }
 }
 
-/* =====================================================
-   FULLSCREEN VIDEO FEED
-===================================================== */
-
-function stopAllFeedVideos(){
-
-  if(videoObserver){
+/* VIDEO FEED */
+function stopAllFeedVideos() {
+  if (videoObserver) {
     videoObserver.disconnect();
     videoObserver = null;
   }
 
-  document.querySelectorAll("#videoFeed video").forEach(video=>{
+  document.querySelectorAll("#videoProducts video").forEach(video => {
     video.pause();
   });
 
   activeFeedVideos = [];
 }
 
-/* CREATE VIDEO FEED */
-function renderVideoFeed(){
-
+function renderVideoFeed() {
   stopAllFeedVideos();
 
-  const feed = $("videoFeed");
-  if(!feed) return;
+  const feed = $("videoProducts");
+  if (!feed) return;
 
-  const videos = publicItems.filter(product=>
+  const videos = publicItems.filter(product =>
     product.is_active !== false &&
-    product.video_url &&
     safeUrl(product.video_url)
   );
 
-  if(!videos.length){
-
+  if (!videos.length) {
     feed.innerHTML = `
       <div class="video-empty">
         <h3>Belum ada video produk</h3>
         <p>Video produk akan dipaparkan di sini.</p>
       </div>
     `;
-
     return;
   }
 
-  feed.innerHTML = videos.map((product,index)=>{
+  feed.innerHTML = videos.map((product, index) => `
+    <section class="video-slide" data-index="${index}">
+      <video
+        class="feed-video"
+        src="${safeUrl(product.video_url)}"
+        muted
+        loop
+        playsinline
+        webkit-playsinline
+        preload="auto"
+      ></video>
 
-    const videoUrl = safeUrl(product.video_url);
-    const title = escapeHTML(product.title || "Produk SHOPIVA");
-    const price = money(product.price);
-    const id = escapeHTML(product.id);
+      <div class="video-progress"></div>
 
-    return `
-      <section class="video-slide" data-index="${index}">
-
-        <video
-          class="feed-video"
-          src="${videoUrl}"
-          muted
-          autoplay
-          loop
-          playsinline
-          webkit-playsinline
-          preload="auto"
-        ></video>
-
-        <div class="video-overlay">
-
-          <div class="video-product-info">
-            <h3>${title}</h3>
-            <p>${price}</p>
-
-            <button
-              class="video-buy-btn"
-              onclick="openProduct('${id}')"
-            >Lihat Produk</button>
-          </div>
-
-          <div class="video-controls">
-
-            <button
-              class="video-sound-btn"
-              onclick="toggleFeedSound(this)"
-              aria-label="Buka atau tutup bunyi"
-            >🔇</button>
-
-            <button
-              onclick="shareShopiva()"
-              aria-label="Kongsi"
-            >↗</button>
-
-          </div>
-
+      <div class="video-overlay">
+        <div class="video-details">
+          <h3>${escapeHTML(product.title || "Produk SHOPIVA")}</h3>
+          <p>${money(product.price)}</p>
+          <button
+            class="video-buy show"
+            onclick="openProduct('${escapeHTML(product.id)}')"
+          >Lihat Produk</button>
         </div>
 
-      </section>
-    `;
-  }).join("");
+        <button
+          class="video-sound"
+          onclick="toggleFeedSound(this)"
+        >🔇</button>
+      </div>
+    </section>
+  `).join("");
 
   activeFeedVideos = Array.from(feed.querySelectorAll("video"));
 
   setupVideoObserver();
 
-  activeFeedVideos.forEach((video,index)=>{
-    if(index === 0){
-      video.muted = true;
-      video.play().catch(()=>{});
-    }
-  });
+  if (activeFeedVideos[0]) {
+    activeFeedVideos[0].play().catch(() => {});
+  }
 }
 
-/* VIDEO OBSERVER */
-function setupVideoObserver(){
+function setupVideoObserver() {
+  const feed = $("videoProducts");
+  if (!feed || !("IntersectionObserver" in window)) return;
 
-  const feed = $("videoFeed");
-  if(!feed) return;
-
-  videoObserver = new IntersectionObserver(entries=>{
-
-    entries.forEach(entry=>{
-
+  videoObserver = new IntersectionObserver(entries => {
+    entries.forEach(entry => {
       const video = entry.target;
 
-      if(entry.isIntersecting && entry.intersectionRatio >= 0.65){
-
-        activeFeedVideos.forEach(other=>{
-          if(other !== video){
-            other.pause();
-          }
+      if (entry.isIntersecting && entry.intersectionRatio >= 0.65) {
+        activeFeedVideos.forEach(other => {
+          if (other !== video) other.pause();
         });
 
-        video.play().catch(()=>{});
+        video.play().catch(() => {});
 
         currentVideoIndex = Number(
           video.closest(".video-slide")?.dataset.index || 0
         );
-
-      }else{
+      } else {
         video.pause();
       }
-
     });
-
-  },{
-    root:feed,
-    threshold:[0.25,0.65,0.9]
+  }, {
+    root: feed,
+    threshold: [0.25, 0.65, 0.9]
   });
 
-  activeFeedVideos.forEach(video=>{
-    videoObserver.observe(video);
-  });
+  activeFeedVideos.forEach(video => videoObserver.observe(video));
 }
 
-/* VIDEO SOUND */
-function toggleFeedSound(button){
+function renderVideoFeed() {
+  stopAllFeedVideos();
 
+  const feed = $("videoProducts");
+  if (!feed) return;
+
+  const videos = publicItems.filter(product =>
+    product.is_active !== false && safeUrl(product.video_url)
+  );
+
+  if (!videos.length) {
+    feed.innerHTML = `
+      <div class="video-empty">
+        <h3>Belum ada video produk</h3>
+        <p>Video produk akan dipaparkan di sini.</p>
+      </div>
+    `;
+    return;
+  }
+
+  feed.innerHTML = videos.map((product, index) => `
+    <section class="video-slide" data-index="${index}">
+      <video class="feed-video"
+        src="${safeUrl(product.video_url)}"
+        muted loop playsinline webkit-playsinline preload="auto"></video>
+      <div class="video-progress"></div>
+      <div class="video-overlay">
+        <div class="video-details">
+          <h3>${escapeHTML(product.title || "Produk SHOPIVA")}</h3>
+          <p>${money(product.price)}</p>
+          <button class="video-buy show"
+            onclick="openProduct('${escapeHTML(product.id)}')">
+            Lihat Produk
+          </button>
+        </div>
+        <button class="video-sound" onclick="toggleFeedSound(this)">🔇</button>
+      </div>
+    </section>
+  `).join("");
+
+  activeFeedVideos = Array.from(feed.querySelectorAll("video"));
+  setupVideoObserver();
+
+  if (activeFeedVideos[0]) activeFeedVideos[0].play().catch(() => {});
+}
+
+function toggleFeedSound(button) {
   const slide = button.closest(".video-slide");
   const video = slide?.querySelector("video");
-
-  if(!video) return;
+  if (!video) return;
 
   const enableSound = video.muted;
 
-  activeFeedVideos.forEach(item=>{
-    item.muted = true;
-  });
+  activeFeedVideos.forEach(item => item.muted = true);
 
-  if(enableSound){
+  if (enableSound) {
     video.muted = false;
     button.textContent = "🔊";
-  }else{
+  } else {
     video.muted = true;
     button.textContent = "🔇";
   }
 
-  document.querySelectorAll(".video-sound-btn").forEach(btn=>{
-    if(btn !== button){
-      btn.textContent = "🔇";
-    }
+  document.querySelectorAll(".video-sound").forEach(other => {
+    if (other !== button) other.textContent = "🔇";
   });
 
-  video.play().catch(()=>{});
+  video.play().catch(() => {});
 }
 
-/* END PART 2 */
-  /* =====================================================
-   SHOPIVA — PART 3 OF 3
-   ADMIN, LOGIN, UPLOAD, PRODUCT CRUD & AUTH
-===================================================== */
+/* LOGIN PANEL */
+function openLogin() {
+  setVisible($("loginPanel"), true);
+  $("loginPanel")?.scrollIntoView({ behavior: "smooth", block: "center" });
+}
 
-/* SHOW LOGIN */
-function showLogin(){
+function closeLogin() {
+  setVisible($("loginPanel"), false);
+}
 
-  const login = $("loginPanel");
-  const dashboard = $("dashboard");
+function showLogin() {
+  setVisible($("dashboard"), false);
+  setVisible($("loginPanel"), false);
 
-  if(login) login.style.display = "block";
-  if(dashboard) dashboard.style.display = "none";
+  const header = $("storeHeader");
+  const footer = $("storeFooter");
+  const nav = $("bottomNav");
 
-  const storefront = $("storefront");
-  if(storefront) storefront.style.display = "block";
+  if (header) header.style.display = "";
+  if (footer) footer.style.display = "";
+  if (nav) nav.style.display = "";
 
   document.body.classList.remove("video-mode");
   stopAllFeedVideos();
+
+  hideAllStorePages();
+  setVisible($("homePage"), true);
+  setActiveNav("home");
 }
 
-/* CLOSE LOGIN */
-function closeLogin(){
-
-  const login = $("loginPanel");
-  if(login) login.style.display = "none";
-}
-
-/* OPEN LOGIN */
-function openLogin(){
-
-  const login = $("loginPanel");
-  if(login) login.style.display = "block";
-
-  const dashboard = $("dashboard");
-  if(dashboard) dashboard.style.display = "none";
-}
-
-/* LOGIN ADMIN */
-async function loginAdmin(){
-
+/* LOGIN */
+async function loginAdmin() {
   const email = $("loginEmail")?.value.trim();
   const password = $("loginPassword")?.value;
-
   const message = $("loginMessage");
 
-  if(!email || !password){
-    if(message) message.textContent = "Masukkan email dan kata laluan.";
+  if (!email || !password) {
+    if (message) message.textContent = "Masukkan email dan kata laluan.";
     return;
   }
 
-  if(message) message.textContent = "Sedang log masuk...";
+  if (message) message.textContent = "Sedang log masuk...";
 
-  try{
-
-    const {data,error} = await db.auth.signInWithPassword({
+  try {
+    const { data, error } = await db.auth.signInWithPassword({
       email,
       password
     });
 
-    if(error) throw error;
+    if (error) throw error;
 
-    if(data.user.id !== ADMIN_UID){
-
+    if (data.user.id !== ADMIN_UID) {
       await db.auth.signOut();
-
-      if(message){
-        message.textContent = "Akaun ini tidak mempunyai akses admin.";
-      }
-
+      if (message) message.textContent = "Akaun ini bukan admin SHOPIVA.";
       return;
     }
 
     currentUser = data.user;
+    setVisible($("loginPanel"), false);
     showDashboard();
+    renderMePage();
 
-  }catch(error){
-
-    console.error("LOGIN ERROR:",error);
-
-    if(message){
-      message.textContent = "Login gagal: " + error.message;
-    }
-
+  } catch(error) {
+    console.error("LOGIN ERROR:", error);
+    if (message) message.textContent = "Login gagal: " + error.message;
   }
 }
 
-/* SHOW ADMIN DASHBOARD */
-function showDashboard(){
-
-  if(!currentUser || currentUser.id !== ADMIN_UID){
+/* DASHBOARD */
+function showDashboard() {
+  if (!currentUser || currentUser.id !== ADMIN_UID) {
     showLogin();
     return;
   }
 
-  const login = $("loginPanel");
-  const dashboard = $("dashboard");
-  const storefront = $("storefront");
-
-  if(login) login.style.display = "none";
-  if(dashboard) dashboard.style.display = "block";
-  if(storefront) storefront.style.display = "none";
-
   document.body.classList.remove("video-mode");
   stopAllFeedVideos();
+  hideAllStorePages();
+
+  setVisible($("loginPanel"), false);
+  setVisible($("dashboard"), true);
+
+  ["storeHeader", "storeFooter", "bottomNav"].forEach(id => {
+    if ($(id)) $(id).style.display = "none";
+  });
 
   renderAdminProducts();
   loadAdminStats();
 }
 
-/* LOGOUT */
-async function logoutAdmin(){
-
-  try{
-
-    await db.auth.signOut();
+async function logoutAdmin() {
+  try {
+    const { error } = await db.auth.signOut();
+    if (error) throw error;
 
     currentUser = null;
     showLogin();
+    renderMePage();
 
-  }catch(error){
-
-    console.error("LOGOUT ERROR:",error);
+  } catch(error) {
     showMessage("Gagal log keluar: " + error.message);
-
   }
 }
 
-/* UPLOAD IMAGE OR VIDEO */
-async function uploadFile(file,bucket){
-
-  if(!file) return null;
+/* UPLOAD */
+async function uploadFile(file, bucket) {
+  if (!file) return null;
 
   const allowedTypes = {
-    "product-images":[
-      "image/jpeg",
-      "image/png",
-      "image/webp"
-    ],
-    "product-videos":[
-      "video/mp4",
-      "video/webm"
-    ]
+    "product-images": ["image/jpeg", "image/png", "image/webp"],
+    "product-videos": ["video/mp4", "video/webm"]
   };
 
-  if(!allowedTypes[bucket]){
-    throw new Error("Jenis storan tidak dibenarkan.");
-  }
+  if (!allowedTypes[bucket]) throw new Error("Bucket tidak dibenarkan.");
 
-  if(!allowedTypes[bucket].includes(file.type)){
+  if (!allowedTypes[bucket].includes(file.type)) {
     throw new Error(
       bucket === "product-images"
         ? "Format gambar mesti JPG, PNG atau WebP."
@@ -1560,49 +1556,40 @@ async function uploadFile(file,bucket){
     ? 5 * 1024 * 1024
     : 100 * 1024 * 1024;
 
-  if(file.size > maxSize){
-
+  if (file.size > maxSize) {
     throw new Error(
       bucket === "product-images"
-        ? "Saiz gambar maksimum ialah 5MB."
-        : "Saiz video maksimum ialah 100MB."
+        ? "Saiz gambar maksimum 5MB."
+        : "Saiz video maksimum 100MB."
     );
   }
 
   const extension = file.name.split(".").pop().toLowerCase();
+  const fileName = crypto.randomUUID() + "-" + Date.now() + "." + extension;
 
-  const fileName =
-    crypto.randomUUID() + "-" + Date.now() + "." + extension;
-
-  const filePath = fileName;
-
-  const {data,error} = await db.storage
+  const { data, error } = await db.storage
     .from(bucket)
-    .upload(filePath,file,{
-      cacheControl:"3600",
-      upsert:false,
-      contentType:file.type
+    .upload(fileName, file, {
+      cacheControl: "3600",
+      upsert: false,
+      contentType: file.type
     });
 
-  if(error) throw error;
+  if (error) throw error;
 
-  const {data:publicData} = db.storage
+  const { data: publicData } = db.storage
     .from(bucket)
     .getPublicUrl(data.path);
 
-  const publicUrl = safeUrl(publicData?.publicUrl);
+  const url = safeUrl(publicData?.publicUrl);
+  if (!url) throw new Error("Gagal mendapatkan URL fail.");
 
-  if(!publicUrl){
-    throw new Error("Gagal mendapatkan pautan fail.");
-  }
-
-  return publicUrl;
+  return url;
 }
 
 /* SAVE PRODUCT */
-async function saveProduct(){
-
-  if(!currentUser || currentUser.id !== ADMIN_UID){
+async function saveProduct() {
+  if (!currentUser || currentUser.id !== ADMIN_UID) {
     showMessage("Sila log masuk sebagai admin.");
     return;
   }
@@ -1615,500 +1602,397 @@ async function saveProduct(){
   const imageFile = $("productImage")?.files?.[0] || null;
   const videoFile = $("productVideo")?.files?.[0] || null;
   const featured = $("productFeatured")?.checked || false;
-
   const message = $("productMessage");
 
-  if(!title){
-    if(message) message.textContent = "Masukkan nama produk.";
+  if (!title) {
+    if (message) message.textContent = "Masukkan nama produk.";
     return;
   }
 
-  if(!price || price < 0){
-    if(message) message.textContent = "Masukkan harga produk yang sah.";
+  if (!Number.isFinite(price) || price <= 0) {
+    if (message) message.textContent = "Masukkan harga yang sah.";
     return;
   }
 
-  if(!affiliateUrl){
-    if(message) message.textContent = "Masukkan pautan affiliate Shopee atau TikTok Shop yang sah.";
-    return;
-  }
-
-  if(!platform || !category){
-    if(message) message.textContent = "Pilih platform dan kategori produk.";
+  if (!affiliateUrl) {
+    if (message) message.textContent = "Masukkan pautan affiliate yang sah.";
     return;
   }
 
   const editId = $("editProductId")?.value || "";
+  const saveButton = $("saveProductButton");
 
-  if(message) message.textContent = "Sedang menyimpan produk...";
+  if (saveButton) saveButton.disabled = true;
+  if (message) message.textContent = "Sedang menyimpan produk...";
 
-  try{
+  try {
+    const existing = editId
+      ? publicItems.find(product => String(product.id) === String(editId))
+      : null;
 
-    let existingProduct = null;
+    let imageUrl = existing?.image_url || null;
+    let videoUrl = existing?.video_url || null;
 
-    if(editId){
-      existingProduct = publicItems.find(
-        product => String(product.id) === String(editId)
-      ) || null;
-    }
-
-    let imageUrl = existingProduct?.image_url || null;
-    let videoUrl = existingProduct?.video_url || null;
-
-    if(imageFile){
-      imageUrl = await uploadFile(imageFile,"product-images");
-    }
-
-    if(videoFile){
-      videoUrl = await uploadFile(videoFile,"product-videos");
-    }
+    if (imageFile) imageUrl = await uploadFile(imageFile, "product-images");
+    if (videoFile) videoUrl = await uploadFile(videoFile, "product-videos");
 
     const productData = {
-      title:title,
-      price:price,
-      platform:platform,
-      category:category,
-      affiliate_url:affiliateUrl,
-      image_url:imageUrl,
-      video_url:videoUrl,
-      is_featured:featured,
-      is_active:true,
-      updated_at:new Date().toISOString()
+      title,
+      price,
+      platform,
+      category,
+      affiliate_url: affiliateUrl,
+      image_url: imageUrl,
+      video_url: videoUrl,
+      is_featured: featured,
+      is_active: true,
+      updated_at: new Date().toISOString()
     };
 
     let result;
 
-    if(editId){
-
-      result = await db
-        .from("products")
+    if (editId) {
+      result = await db.from("products")
         .update(productData)
-        .eq("id",editId)
-        .select();
-
-    }else{
-
-      productData.created_at = new Date().toISOString();
-
-      result = await db
-        .from("products")
-        .insert(productData)
-        .select();
-
+        .eq("id", editId);
+    } else {
+      result = await db.from("products")
+        .insert(productData);
     }
 
-    if(result.error) throw result.error;
+    if (result.error) throw result.error;
 
-    if(message){
+    if (message) {
       message.textContent = "Produk berjaya disimpan!";
+      message.classList.add("success-message");
     }
 
     resetProductForm();
-
     await loadProducts();
-
     renderAdminProducts();
     loadAdminStats();
 
-  }catch(error){
-
-    console.error("SAVE PRODUCT ERROR:",error);
-
-    if(message){
+  } catch(error) {
+    console.error("SAVE PRODUCT ERROR:", error);
+    if (message) {
       message.textContent = "Gagal menyimpan: " + error.message;
+      message.classList.remove("success-message");
     }
-
+  } finally {
+    if (saveButton) saveButton.disabled = false;
   }
 }
 
-/* RESET PRODUCT FORM */
-function resetProductForm(){
-
-  const fields = [
+/* RESET FORM */
+function resetProductForm() {
+  [
     "productTitle",
     "productPrice",
-    "productPlatform",
-    "productCategory",
     "productLink",
     "productImage",
-    "productVideo",
-    "editProductId"
-  ];
-
-  fields.forEach(id=>{
-    const element = $(id);
-    if(element) element.value = "";
+    "productVideo"
+  ].forEach(id => {
+    if ($(id)) $(id).value = "";
   });
 
-  const featured = $("productFeatured");
-  if(featured) featured.checked = false;
+  if ($("productFeatured")) $("productFeatured").checked = false;
 
-  const message = $("productMessage");
-  if(message) message.textContent = "";
+  if ($("editProductId")) $("editProductId").value = "";
 
-  const button = $("saveProductBtn");
-  if(button) button.textContent = "Simpan Produk";
+  if ($("imagePreview")) $("imagePreview").innerHTML = "";
+  if ($("videoPreview")) $("videoPreview").innerHTML = "";
+
+  if ($("currentImageNote")) $("currentImageNote").textContent = "";
+  if ($("currentVideoNote")) $("currentVideoNote").textContent = "";
+
+  if ($("formHeading")) $("formHeading").textContent = "Tambah Produk Baharu";
+
+  if ($("saveProductButton")) $("saveProductButton").textContent = "Simpan Produk";
+
+  setVisible($("cancelEditButton"), false);
+
+  if ($("productMessage")) {
+    $("productMessage").textContent = "";
+    $("productMessage").classList.remove("success-message");
+  }
+}
+
+function cancelEdit() {
+  resetProductForm();
 }
 
 /* EDIT PRODUCT */
-function editProduct(id){
+function editProduct(id) {
+  if (!currentUser || currentUser.id !== ADMIN_UID) return;
 
-  if(!currentUser || currentUser.id !== ADMIN_UID) return;
-
-  const product = publicItems.find(
-    item => String(item.id) === String(id)
-  );
-
-  if(!product){
+  const product = publicItems.find(item => String(item.id) === String(id));
+  if (!product) {
     showMessage("Produk tidak dijumpai.");
     return;
   }
 
-  if($("editProductId")) $("editProductId").value = product.id;
-  if($("productTitle")) $("productTitle").value = product.title || "";
-  if($("productPrice")) $("productPrice").value = product.price || "";
-  if($("productPlatform")) $("productPlatform").value = product.platform || "";
-  if($("productCategory")) $("productCategory").value = product.category || "";
-  if($("productLink")) $("productLink").value = product.affiliate_url || "";
-  if($("productFeatured")) $("productFeatured").checked = !!product.is_featured;
+  if ($("editProductId")) $("editProductId").value = product.id;
+  if ($("productTitle")) $("productTitle").value = product.title || "";
+  if ($("productPrice")) $("productPrice").value = product.price || "";
+  if ($("productPlatform")) $("productPlatform").value = product.platform || "shopee";
+  if ($("productCategory")) $("productCategory").value = product.category || "Lain-lain";
+  if ($("productLink")) $("productLink").value = product.affiliate_url || "";
+  if ($("productFeatured")) $("productFeatured").checked = !!product.is_featured;
 
-  if($("productImage")) $("productImage").value = "";
-  if($("productVideo")) $("productVideo").value = "";
+  if ($("productImage")) $("productImage").value = "";
+  if ($("productVideo")) $("productVideo").value = "";
 
-  const button = $("saveProductBtn");
-  if(button) button.textContent = "Kemaskini Produk";
+  if ($("formHeading")) $("formHeading").textContent = "Kemaskini Produk";
+  if ($("saveProductButton")) $("saveProductButton").textContent = "Kemaskini Produk";
 
-  const message = $("productMessage");
-  if(message){
-    message.textContent = "Sedang mengedit: " + (product.title || "");
+  setVisible($("cancelEditButton"), true);
+
+  if ($("currentImageNote")) {
+    $("currentImageNote").textContent = product.image_url
+      ? "Gambar sedia ada dikekalkan jika tidak pilih gambar baharu."
+      : "Tiada gambar sedia ada.";
   }
 
-  const form = $("productForm") || $("productTitle");
-
-  if(form){
-    form.scrollIntoView({
-      behavior:"smooth",
-      block:"center"
-    });
+  if ($("currentVideoNote")) {
+    $("currentVideoNote").textContent = product.video_url
+      ? "Video sedia ada dikekalkan jika tidak pilih video baharu."
+      : "Tiada video sedia ada.";
   }
+
+  $("productFormPanel")?.scrollIntoView({
+    behavior: "smooth",
+    block: "start"
+  });
 }
 
-/* RENDER ADMIN PRODUCTS */
-function renderAdminProducts(){
-
+/* ADMIN PRODUCT LIST */
+function renderAdminProducts() {
   const container = $("adminProducts");
-  if(!container) return;
+  if (!container) return;
 
-  if(!publicItems.length){
-
-    container.innerHTML = `
-      <div class="empty-products">
-        <p>Belum ada produk.</p>
-      </div>
-    `;
-
+  if (!publicItems.length) {
+    container.innerHTML = `<div class="empty">Belum ada produk.</div>`;
     return;
   }
 
-  container.innerHTML = publicItems.map(product=>{
-
-    const id = escapeHTML(product.id);
-    const title = escapeHTML(product.title || "Produk");
+  container.innerHTML = publicItems.map(product => {
     const image = safeUrl(product.image_url);
     const video = safeUrl(product.video_url);
 
-    let media = "";
+    let media = `<div>📦</div>`;
 
-    if(image){
-      media = `<img src="${image}" alt="${title}" loading="lazy">`;
-    }else if(video){
-      media = `
-        <video
-          src="${video}"
-          muted
-          autoplay
-          loop
-          playsinline
-          preload="metadata"
-        ></video>
-      `;
-    }else{
-      media = `<div class="admin-no-image">📦</div>`;
+    if (image) {
+      media = `<img src="${image}" alt="" loading="lazy">`;
+    } else if (video) {
+      media = `<video src="${video}" muted autoplay loop playsinline></video>`;
     }
 
     return `
       <div class="admin-product-row">
+        <div class="admin-product-image">${media}</div>
 
-        <div class="admin-product-image">
-          ${media}
-        </div>
-
-        <div class="admin-product-details">
-          <strong>${title}</strong>
+        <div class="admin-product-info">
+          <strong>${escapeHTML(product.title || "Produk")}</strong>
           <p>${money(product.price)}</p>
           <small>${escapeHTML(product.platform || "")}</small>
           <small>${escapeHTML(product.category || "")}</small>
-          <small>
-            ${product.is_active === false ? "Tidak aktif" : "Aktif"}
-          </small>
+          <small>${product.is_active === false ? "Tidak aktif" : "Aktif"}</small>
         </div>
 
         <div class="admin-product-actions">
-
-          <button
-            type="button"
-            onclick="editProduct('${id}')"
-          >Edit</button>
-
-          <button
-            type="button"
-            onclick="deleteProduct('${id}')"
-          >Padam</button>
-
+          <button onclick="editProduct('${escapeHTML(product.id)}')">Edit</button>
+          <button onclick="deleteProduct('${escapeHTML(product.id)}')">Padam</button>
         </div>
-
       </div>
     `;
-
   }).join("");
 }
 
-/* DELETE PRODUCT */
-async function deleteProduct(id){
+/* DELETE */
+async function deleteProduct(id) {
+  if (!currentUser || currentUser.id !== ADMIN_UID) return;
 
-  if(!currentUser || currentUser.id !== ADMIN_UID){
-    showMessage("Sila log masuk sebagai admin.");
-    return;
-  }
+  const product = publicItems.find(item => String(item.id) === String(id));
+  if (!product) return;
 
-  const product = publicItems.find(
-    item => String(item.id) === String(id)
-  );
+  if (!confirm("Padam produk " + (product.title || "") + "?")) return;
 
-  if(!product) return;
-
-  const confirmed = confirm(
-    "Adakah anda pasti mahu memadam produk ini?\n\n" +
-    (product.title || "Produk")
-  );
-
-  if(!confirmed) return;
-
-  try{
-
-    const {error} = await db
-      .from("products")
-      .delete()
-      .eq("id",id);
-
-    if(error) throw error;
+  try {
+    const { error } = await db.from("products").delete().eq("id", id);
+    if (error) throw error;
 
     await loadProducts();
-
     renderAdminProducts();
     loadAdminStats();
 
     showMessage("Produk berjaya dipadam.");
-
-  }catch(error){
-
-    console.error("DELETE PRODUCT ERROR:",error);
-    showMessage("Gagal memadam produk: " + error.message);
-
+  } catch(error) {
+    console.error("DELETE ERROR:", error);
+    showMessage("Gagal memadam: " + error.message);
   }
 }
 
 /* ADMIN STATS */
-async function loadAdminStats(){
-
+async function loadAdminStats() {
   const container = $("adminStats");
-  if(!container) return;
+  if (!container) return;
 
-  try{
-
-    const {count,error} = await db
+  try {
+    const { count, error } = await db
       .from("products")
-      .select("*",{count:"exact",head:true});
+      .select("*", { count: "exact", head: true });
 
-    if(error) throw error;
+    if (error) throw error;
 
-    const activeCount = publicItems.filter(
-      product => product.is_active !== false
-    ).length;
+    const activeCount = publicItems.filter(p => p.is_active !== false).length;
 
     container.innerHTML = `
-      <div class="admin-stat-card">
-        <strong>${count ?? publicItems.length}</strong>
-        <span>Jumlah Produk</span>
-      </div>
-
-      <div class="admin-stat-card">
-        <strong>${activeCount}</strong>
-        <span>Produk Aktif</span>
-      </div>
-    `;
-
-  }catch(error){
-
-    console.error("ADMIN STATS ERROR:",error);
-
-    container.innerHTML = `
-      <div class="admin-stat-card">
-        <strong>${publicItems.length}</strong>
-        <span>Jumlah Produk</span>
+      <div class="stats-grid">
+        <div class="stat-card">
+          <small>Jumlah Produk</small>
+          <strong>${count ?? publicItems.length}</strong>
+        </div>
+        <div class="stat-card">
+          <small>Produk Aktif</small>
+          <strong>${activeCount}</strong>
+        </div>
       </div>
     `;
-
+  } catch(error) {
+    console.error("STATS ERROR:", error);
+    container.innerHTML = `<div class="empty">Statistik tidak tersedia.</div>`;
   }
 }
 
 /* ME PAGE */
-function renderMePage(){
+function renderMePage() {
+  const page = $("mePage");
+  if (!page) return;
 
-  const mePage = $("mePage");
-  if(!mePage) return;
-
-  if(currentUser && currentUser.id === ADMIN_UID){
-
-    mePage.innerHTML = `
-      <div class="me-content">
-        <h3>Admin SHOPIVA</h3>
-        <p>${escapeHTML(currentUser.email || "")}</p>
-        <button onclick="showDashboard()">Dashboard Admin</button>
-        <button onclick="logoutAdmin()">Log Keluar</button>
+  if (currentUser && currentUser.id === ADMIN_UID) {
+    page.innerHTML = `
+      <div class="me-card">
+        <div class="me-avatar">S</div>
+        <div class="me-title">Admin SHOPIVA</div>
+        <div class="me-desc">${escapeHTML(currentUser.email || "")}</div>
+        <button class="me-button" onclick="showDashboard()">Dashboard Admin</button>
+        <button class="me-button" onclick="logoutAdmin()">Log Keluar</button>
       </div>
     `;
-
-  }else{
-
-    mePage.innerHTML = `
-      <div class="me-content">
-        <h3>Selamat datang ke SHOPIVA</h3>
-        <p>Terokai produk pilihan kami.</p>
-        <button onclick="openLogin()">Login Admin</button>
+  } else {
+    page.innerHTML = `
+      <div class="me-card">
+        <div class="me-avatar">S</div>
+        <div class="me-title">Selamat datang ke SHOPIVA</div>
+        <div class="me-desc">Terokai produk pilihan kami.</div>
+        <button class="me-button" onclick="openLogin()">Log Masuk Admin</button>
       </div>
     `;
-
   }
 }
 
 /* AUTH LISTENER */
-db.auth.onAuthStateChange(async(event,session)=>{
-
-  if(event === "SIGNED_OUT"){
-
+db.auth.onAuthStateChange((event, session) => {
+  if (event === "SIGNED_OUT") {
     currentUser = null;
-
     showLogin();
     renderMePage();
-
     return;
   }
 
-  if(session && session.user){
-
-    if(session.user.id === ADMIN_UID){
-
-      currentUser = session.user;
-
-      showDashboard();
-      renderMePage();
-
-    }else{
-
-      currentUser = null;
-
-      await db.auth.signOut();
-
-      showLogin();
-      renderMePage();
-
-    }
+  if (session?.user?.id === ADMIN_UID) {
+    currentUser = session.user;
+    setVisible($("loginPanel"), false);
+    showDashboard();
+    renderMePage();
   }
-
 });
 
-/* INITIALIZE SHOPIVA */
-async function initShopiva(){
-
-  try{
-
+/* INITIALIZE */
+async function initShopiva() {
+  try {
     await loadProducts();
 
-    const {data,error} = await db.auth.getSession();
-
-    if(error) throw error;
+    const { data, error } = await db.auth.getSession();
+    if (error) throw error;
 
     const session = data?.session;
 
-    if(session?.user){
+    if (session?.user?.id === ADMIN_UID) {
+      currentUser = session.user;
+      showDashboard();
+    } else {
+      currentUser = null;
 
-      if(session.user.id === ADMIN_UID){
-
-        currentUser = session.user;
-
-        showDashboard();
-
-      }else{
-
+      if (session?.user) {
         await db.auth.signOut();
-
-        currentUser = null;
-        showLogin();
-
       }
 
-    }else{
-
-      currentUser = null;
       showLogin();
-
     }
 
     renderMePage();
-
-  }catch(error){
-
-    console.error("SHOPIVA INIT ERROR:",error);
+  } catch(error) {
+    console.error("INIT ERROR:", error);
+    currentUser = null;
     showLogin();
-
   }
 }
 
-/* FORM EVENTS */
-document.addEventListener("DOMContentLoaded",()=>{
+/* PREVIEW UPLOAD */
+function setupPreviews() {
+  $("productImage")?.addEventListener("change", event => {
+    const file = event.target.files?.[0];
+    const preview = $("imagePreview");
+    if (!preview) return;
 
-  const loginForm = $("loginForm");
+    preview.innerHTML = "";
 
-  if(loginForm){
-    loginForm.addEventListener("submit",event=>{
-      event.preventDefault();
-      loginAdmin();
-    });
+    if (file && file.type.startsWith("image/")) {
+      const url = URL.createObjectURL(file);
+      preview.innerHTML = `<img class="preview-image" src="${url}" alt="Preview">`;
+    }
+  });
+
+  $("productVideo")?.addEventListener("change", event => {
+    const file = event.target.files?.[0];
+    const preview = $("videoPreview");
+    if (!preview) return;
+
+    preview.innerHTML = "";
+
+    if (file && file.type.startsWith("video/")) {
+      const url = URL.createObjectURL(file);
+      preview.innerHTML = `
+        <video class="preview-video" src="${url}" controls playsinline></video>
+      `;
+    }
+  });
+}
+
+/* START */
+document.addEventListener("DOMContentLoaded", () => {
+  // Create hidden edit ID field if it is not in the HTML.
+  if (!$("editProductId")) {
+    const hidden = document.createElement("input");
+    hidden.type = "hidden";
+    hidden.id = "editProductId";
+    $("productFormPanel")?.appendChild(hidden);
   }
 
-  const productForm = $("productForm");
-
-  if(productForm){
-    productForm.addEventListener("submit",event=>{
-      event.preventDefault();
-      saveProduct();
-    });
-  }
-
-  const searchInput = $("searchInput");
-
-  if(searchInput){
-    searchInput.addEventListener("input",event=>{
-      handleSearch(event.target.value);
-    });
-  }
-
+  setupPreviews();
+  renderCategories();
+  renderMePage();
   initShopiva();
-
 });
-
-/* END SHOPIVA JAVASCRIPT */
 </script>
+
+
+  
+  
+
+          
+         
+
 </body>
 </html>
