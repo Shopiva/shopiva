@@ -1030,11 +1030,11 @@ async function loadAdminProducts(){
         </div>
 
         <div class="admin-product-info">
-          <strong>${escapeHTML(product.name)}</strong>
-          <p>${money(product.price)}</p>
-          <small>${escapeHTML(product.platform || "")}</small>
-          <small>${product.is_active ? "Aktif" : "Tidak aktif"}</small>
-        </div>
+  <strong>${escapeHTML(product.title || "")}</strong>
+  <p>${money(product.price)}</p>
+  <small>${escapeHTML(product.platform || "")}</small>
+  <small>${product.is_active ? "Aktif" : "Tidak aktif"}</small>
+</div>
 
         <div class="admin-product-actions">
           <button onclick="editProduct('${product.id}')">Edit</button>
