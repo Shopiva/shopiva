@@ -143,7 +143,73 @@ body.video-mode #videoPage{position:fixed;inset:0;width:100%;height:100dvh;displ
     max-height:220px!important;
   }
 }
+/* SHOPIVA — FORCE COMPACT PRODUCT SIZE */
 
+#featuredProducts,
+#publicProducts{
+  display:grid!important;
+  grid-template-columns:repeat(2,minmax(0,1fr))!important;
+  gap:7px!important;
+  padding:4px 8px 18px!important;
+}
+
+.public-product-card{
+  width:100%!important;
+  min-width:0!important;
+  overflow:hidden!important;
+  border:1px solid #eee8e3!important;
+  border-radius:9px!important;
+  background:#fff!important;
+}
+
+.public-product-card .photo{
+  position:relative!important;
+  width:100%!important;
+  height:auto!important;
+  aspect-ratio:1/1!important;
+  max-height:145px!important;
+  overflow:hidden!important;
+}
+
+.public-product-card .photo img,
+.public-product-card .photo video{
+  width:100%!important;
+  height:100%!important;
+  object-fit:cover!important;
+  display:block!important;
+}
+
+.public-product-card .product-info{
+  padding:7px!important;
+}
+
+.public-product-card .product-info h3{
+  font-size:11px!important;
+  line-height:1.4!important;
+  margin:0 0 5px!important;
+}
+
+.public-product-card .product-price{
+  font-size:12px!important;
+  margin:5px 0!important;
+}
+
+.public-product-card .buy-button{
+  width:100%!important;
+  padding:7px 4px!important;
+  font-size:10px!important;
+}
+
+@media(min-width:700px){
+  #featuredProducts,
+  #publicProducts{
+    grid-template-columns:repeat(4,minmax(0,1fr))!important;
+  }
+
+  .public-product-card .photo{
+    max-height:220px!important;
+  }
+}
 </style>
 </head>
 <body>
