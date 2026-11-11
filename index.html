@@ -7,16 +7,11 @@
 <meta name="theme-color" content="#ee4d2d">
 <title>SHOPIVA — Affiliate Marketplace</title>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-
 <style>
-:root{
- --orange:#ee4d2d;--pink:#ff7892;--purple:#7952b3;
- --bg:#fff9f5;--text:#414141;--muted:#999;--line:#eee8e3;
-}
+:root{--orange:#ee4d2d;--pink:#ff7892;--purple:#7952b3;--bg:#fff9f5;--text:#414141;--muted:#999;--line:#eee8e3}
 *{box-sizing:border-box}
 body{margin:0;background:var(--bg);color:var(--text);font-family:Arial,sans-serif;font-size:13px;padding-bottom:70px}
-button,input,select{font:inherit}
-button{cursor:pointer}
+button,input,select{font:inherit}button{cursor:pointer}
 header{background:linear-gradient(110deg,#ee4d2d,#ff7892,#ffbd65);color:white;padding:15px 14px 13px;position:sticky;top:0;z-index:10}
 .top{display:flex;justify-content:space-between;align-items:center}
 .logo{font-size:22px;letter-spacing:2px;font-weight:400}
@@ -73,147 +68,82 @@ header{background:linear-gradient(110deg,#ee4d2d,#ff7892,#ffbd65);color:white;pa
 .delete-btn{background:#fff0eb;color:#e44b35}
 .form-note{font-size:10px;color:#999;margin:-5px 0 10px}
 
-/* VIDEO FEED */
-.video-feed{
- height:calc(100dvh - 145px);
- min-height:400px;
- overflow-y:auto;
- scroll-snap-type:y mandatory;
- overscroll-behavior:contain;
- background:#111;
-}
-.video-slide{
- height:100%;
- min-height:100%;
- width:100%;
- position:relative;
- overflow:hidden;
- scroll-snap-align:start;
- background:#111;
-}
-.video-slide video{
- width:100%;height:100%;object-fit:contain;
- background:#111;display:block;
-}
-.video-overlay{
- position:absolute;left:0;right:0;bottom:0;
- padding:65px 15px 22px;
- background:linear-gradient(transparent,rgba(0,0,0,.78));
- color:white;pointer-events:none;
-}
-.video-title{font-size:14px;margin-bottom:8px}
-.video-price{font-size:13px;margin-bottom:12px;color:#ffd28a}
-.video-cta{
- display:inline-block;background:var(--orange);color:white;
- text-decoration:none;padding:11px 22px;border-radius:25px;
- font-size:12px;opacity:0;transform:translateY(12px);
- transition:.3s;pointer-events:none;
-}
+/* VIDEO FULL SCREEN */
+body.video-mode{padding-bottom:0;overflow:hidden;background:#000}
+body.video-mode header,body.video-mode footer{display:none}
+body.video-mode #videoPage{position:fixed;inset:0;width:100%;height:100dvh;display:block;z-index:20;background:#000;margin:0;padding:0;overflow:hidden}
+.video-feed{position:absolute;inset:0;width:100%;height:100dvh;min-height:100dvh;overflow-y:auto;overflow-x:hidden;scroll-snap-type:y mandatory;overscroll-behavior:contain;-webkit-overflow-scrolling:touch;background:#000;scrollbar-width:none}
+.video-feed::-webkit-scrollbar{display:none}
+.video-slide{position:relative;width:100%;height:100dvh;min-height:100dvh;overflow:hidden;scroll-snap-align:start;scroll-snap-stop:always;background:#000}
+.video-slide video{position:absolute;inset:0;width:100%;height:100%;display:block;object-fit:cover;object-position:center center;background:#000}
+.video-overlay{position:absolute;left:0;right:0;bottom:0;z-index:2;padding:65px 15px 105px;background:linear-gradient(transparent,rgba(0,0,0,.12) 30%,rgba(0,0,0,.78));color:white;pointer-events:none}
+.video-title{font-size:14px;line-height:1.5;margin-bottom:8px;text-shadow:0 1px 3px #000}
+.video-price{font-size:14px;font-weight:bold;margin-bottom:12px;color:#ffd28a;text-shadow:0 1px 3px #000}
+.video-cta{display:inline-block;background:var(--orange);color:white;text-decoration:none;padding:12px 25px;border-radius:25px;font-size:12px;font-weight:bold;opacity:0;transform:translateY(12px);transition:opacity .3s,transform .3s;pointer-events:none}
 .video-cta.show{opacity:1;transform:translateY(0);pointer-events:auto}
-.video-sound{
- position:absolute;right:14px;bottom:145px;width:40px;height:40px;
- border:0;border-radius:50%;background:#0008;color:white;font-size:17px;z-index:3;
-}
+.video-sound{position:absolute;right:15px;bottom:145px;width:42px;height:42px;border:1px solid #ffffff55;border-radius:50%;background:#0008;color:white;font-size:18px;z-index:4;display:flex;align-items:center;justify-content:center}
+.video-mode .bottom-nav{background:rgba(20,20,20,.78);border-top:1px solid #ffffff22;backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px)}
+.video-mode .nav-item{background:transparent;color:#ddd}
+.video-mode .nav-item.active{color:#ff795e}
 @media(min-width:700px){
  .products{grid-template-columns:repeat(4,minmax(0,1fr))}
  header{padding-left:5%;padding-right:5%}
  main,#dashboard{max-width:1100px;margin:auto}
- .video-feed{max-width:480px;margin:auto}
 }
 </style>
 </head>
-
 <body>
 <header>
- <div class="top">
-  <div><div class="logo">SHOPIVA</div><div class="tagline">Your Marketplace, Your Style.</div></div>
- </div>
+ <div class="top"><div><div class="logo">SHOPIVA</div><div class="tagline">Your Marketplace, Your Style.</div></div></div>
  <input id="search" class="search" placeholder="Cari produk kegemaran anda..." oninput="renderCurrentPage()">
 </header>
-
 <main id="homePage">
- <div class="section-title">Kategori Produk</div>
- <div class="categories" id="categories"></div>
- <div class="section-title">Produk Pilihan SHOPIVA</div>
- <div class="products" id="featured"></div>
- <div class="section-title">Semua Produk</div>
- <div class="products" id="products"></div>
+ <div class="section-title">Kategori Produk</div><div class="categories" id="categories"></div>
+ <div class="section-title">Produk Pilihan SHOPIVA</div><div class="products" id="featured"></div>
+ <div class="section-title">Semua Produk</div><div class="products" id="products"></div>
 </main>
-
-<main id="videoPage" class="hidden">
- <div class="video-feed" id="videoProducts"></div>
-</main>
-
+<main id="videoPage" class="hidden"><div class="video-feed" id="videoProducts"></div></main>
 <main id="likedPage" class="hidden">
- <div class="page-heading">Produk Disukai</div>
- <div class="page-subtitle">Koleksi produk kegemaran anda.</div>
+ <div class="page-heading">Produk Disukai</div><div class="page-subtitle">Koleksi produk kegemaran anda.</div>
  <div class="products" id="likedProducts"></div>
 </main>
-
 <main id="mePage" class="hidden">
  <div class="page-heading">Akaun Saya</div>
- <div class="me-card">
-  <div class="me-avatar">S</div>
-  <div class="me-title">Selamat datang ke SHOPIVA</div>
-  <div class="me-desc">Temui produk menarik daripada Shopee dan TikTok Shop. Simpan produk kegemaran dan terokai video produk.</div>
-  <button class="me-button" onclick="openLogin()">Log Masuk Admin</button>
- </div>
+ <div class="me-card"><div class="me-avatar">S</div><div class="me-title">Selamat datang ke SHOPIVA</div>
+ <div class="me-desc">Temui produk menarik daripada Shopee dan TikTok Shop. Simpan produk kegemaran dan terokai video produk.</div>
+ <button class="me-button" onclick="openLogin()">Log Masuk Admin</button></div>
  <div class="me-card"><div class="me-title">Tentang SHOPIVA</div><div class="me-desc">SHOPIVA · Affiliate Marketplace</div></div>
 </main>
-
 <section id="loginPanel" class="panel hidden">
- <h3>Admin SHOPIVA</h3>
- <label class="field-label">Email admin</label>
+ <h3>Admin SHOPIVA</h3><label class="field-label">Email admin</label>
  <input id="loginEmail" class="field" type="email" placeholder="Email admin">
- <label class="field-label">Password</label>
- <input id="loginPassword" class="field" type="password" placeholder="Password">
+ <label class="field-label">Password</label><input id="loginPassword" class="field" type="password" placeholder="Password">
  <button class="action" onclick="loginAdmin()">Log Masuk</button>
- <button class="action secondary" onclick="closeLogin()">Kembali</button>
- <div id="loginMessage" class="message"></div>
+ <button class="action secondary" onclick="closeLogin()">Kembali</button><div id="loginMessage" class="message"></div>
 </section>
-
 <section id="dashboard" class="hidden">
- <div class="panel">
-  <h3>Dashboard SHOPIVA</h3>
-  <div id="adminStats">Memuatkan statistik...</div>
-  <button class="action secondary" onclick="backToStore()">Kembali ke Kedai</button>
-  <button class="action secondary" onclick="logoutAdmin()">Log Keluar</button>
- </div>
-
+ <div class="panel"><h3>Dashboard SHOPIVA</h3><div id="adminStats">Memuatkan statistik...</div>
+ <button class="action secondary" onclick="backToStore()">Kembali ke Kedai</button>
+ <button class="action secondary" onclick="logoutAdmin()">Log Keluar</button></div>
  <div class="panel" id="productFormPanel">
-  <h3 id="formHeading">Tambah Produk Baharu</h3>
-  <label class="field-label">Tajuk produk</label>
-  <input id="productTitle" class="field" placeholder="Nama produk">
-  <label class="field-label">Harga (RM)</label>
-  <input id="productPrice" class="field" type="number" min="0" step="0.01" placeholder="29.90">
-  <label class="field-label">Platform</label>
-  <select id="productPlatform" class="field"><option value="shopee">Shopee</option><option value="tiktok">TikTok Shop</option></select>
-  <label class="field-label">Kategori</label>
-  <select id="productCategory" class="field">
-   <option>Skincare</option><option>Kecantikan</option><option>Kesihatan</option><option>Fesyen</option><option>Elektronik</option><option>Rumah & Dapur</option><option>Ibu & Anak</option><option>Makanan & Minuman</option><option>Gajet</option><option>Lain-lain</option>
-  </select>
-  <label class="field-label">Pautan affiliate</label>
-  <input id="productLink" class="field" type="url" placeholder="https://...">
-  <label class="field-label">Gambar produk</label>
-  <input id="productImage" class="field" type="file" accept="image/jpeg,image/png,image/webp">
-  <div id="currentImageNote" class="form-note"></div>
-  <label class="field-label">Video produk (pilihan)</label>
-  <input id="productVideo" class="field" type="file" accept="video/mp4,video/webm">
-  <div id="currentVideoNote" class="form-note"></div>
-  <label class="field-label"><input id="productFeatured" type="checkbox"> Produk Pilihan SHOPIVA</label>
-  <button class="action" id="saveProductButton" onclick="saveProduct()">Simpan Produk</button>
-  <button class="action secondary hidden" id="cancelEditButton" onclick="cancelEdit()">Batal Edit</button>
-  <div id="productMessage" class="message"></div>
- </div>
-
- <div class="panel">
-  <h3>Urus Produk</h3>
-  <div id="adminProducts">Memuatkan produk...</div>
- </div>
+ <h3 id="formHeading">Tambah Produk Baharu</h3>
+ <label class="field-label">Tajuk produk</label><input id="productTitle" class="field" placeholder="Nama produk">
+ <label class="field-label">Harga (RM)</label><input id="productPrice" class="field" type="number" min="0" step="0.01" placeholder="29.90">
+ <label class="field-label">Platform</label><select id="productPlatform" class="field"><option value="shopee">Shopee</option><option value="tiktok">TikTok Shop</option></select>
+ <label class="field-label">Kategori</label><select id="productCategory" class="field">
+ <option>Skincare</option><option>Kecantikan</option><option>Kesihatan</option><option>Fesyen</option><option>Elektronik</option><option>Rumah & Dapur</option><option>Ibu & Anak</option><option>Makanan & Minuman</option><option>Gajet</option><option>Lain-lain</option></select>
+ <label class="field-label">Pautan affiliate</label><input id="productLink" class="field" type="url" placeholder="https://...">
+ <label class="field-label">Gambar produk</label><input id="productImage" class="field" type="file" accept="image/jpeg,image/png,image/webp">
+ <div id="currentImageNote" class="form-note"></div>
+ <label class="field-label">Video produk (pilihan)</label><input id="productVideo" class="field" type="file" accept="video/mp4,video/webm">
+ <div id="currentVideoNote" class="form-note"></div>
+ <label class="field-label"><input id="productFeatured" type="checkbox"> Produk Pilihan SHOPIVA</label>
+ <button class="action" id="saveProductButton" onclick="saveProduct()">Simpan Produk</button>
+ <button class="action secondary hidden" id="cancelEditButton" onclick="cancelEdit()">Batal Edit</button>
+ <div id="productMessage" class="message"></div></div>
+ <div class="panel"><h3>Urus Produk</h3><div id="adminProducts">Memuatkan produk...</div></div>
 </section>
-
 <footer>SHOPIVA © 2026 · Affiliate Marketplace</footer>
-
 <nav class="bottom-nav" id="bottomNav">
  <button class="nav-item active" id="navHome" onclick="storeNav('home')"><span class="nav-icon">⌂</span>Home</button>
  <button class="nav-item" id="navVideo" onclick="storeNav('video')"><span class="nav-icon">▣</span>Video</button>
@@ -221,370 +151,1086 @@ header{background:linear-gradient(110deg,#ee4d2d,#ff7892,#ffbd65);color:white;pa
  <button class="nav-item" id="navShare" onclick="shareShopiva()"><span class="nav-icon">↗</span>Share</button>
  <button class="nav-item" id="navMe" onclick="storeNav('me')"><span class="nav-icon">♙</span>Me</button>
 </nav>
-
 <script>
-// SUPABASE CONFIGURATION — KEKALKAN
-const SUPABASE_URL="https://komhhyccnlfwgndfbxnl.supabase.co";
-const SUPABASE_KEY="sb_publishable__1YWZSsAo_oiMAXhQHcZbg_eqIQKN7U";
-const ADMIN_UID="e0fd7188-0904-4500-ac84-8ea21a22f6c5";
+/* =========================================
+   SHOPIVA — PART 2
+   SUPABASE, STOREFRONT, NAVIGATION & VIDEO
+========================================= */
 
-const db=window.supabase.createClient(SUPABASE_URL,SUPABASE_KEY);
-let publicItems=[],adminItems=[],selectedCategory="Semua";
-let adminUser=null,currentPage="home",editingProductId=null,savingProduct=false;
-let videoObserver=null;
-let videoTimers=new Map();
+/* SUPABASE CONFIG */
+const SUPABASE_URL = "https://komhhyccnlfwgndfbxnl.supabase.co";
+const SUPABASE_KEY = "sb_publishable__1YWZSsAo_oiMAXhQHcZbg_eqIQKN7U";
+const ADMIN_UID = "e0fd7188-0904-4500-ac84-8ea21a22f6c5";
 
-const categories=["Semua","Skincare","Kecantikan","Kesihatan","Fesyen","Elektronik","Rumah & Dapur","Ibu & Anak","Makanan & Minuman","Gajet","Lain-lain"];
+const db = window.supabase.createClient(
+  SUPABASE_URL,
+  SUPABASE_KEY
+);
 
+/* GLOBAL STATE */
+let currentUser = null;
+let currentPage = "home";
+let publicItems = [];
+let adminItems = [];
+let selectedCategory = "Semua";
+let likedProducts = JSON.parse(
+  localStorage.getItem("shopiva_likes") || "[]"
+);
+let likedOnly = false;
+let publicFilter = "all";
+let videoObserver = null;
+let videoTimers = [];
+let activeVideo = null;
+let videoSoundOn = false;
+let editingProductId = null;
+
+/* ELEMENT HELPER */
+const $ = id => document.getElementById(id);
+
+/* SAFE TEXT */
 function escapeHTML(value){
- return String(value??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+  return String(value ?? "").replace(/[&<>"']/g, char => ({
+    "&":"&amp;",
+    "<":"&lt;",
+    ">":"&gt;",
+    '"':"&quot;",
+    "'":"&#039;"
+  }[char]));
 }
+
+/* SAFE URL */
 function safeUrl(value){
- try{const u=new URL(value);return ["https:","http:"].includes(u.protocol)?u.href:"";}catch{return "";}
+  try{
+    const url = new URL(value);
+    if(url.protocol === "https:" || url.protocol === "http:"){
+      return url.href;
+    }
+  }catch(error){}
+  return "";
 }
-function formatPrice(v){return "RM"+Number(v).toFixed(2);}
-function showMessage(id,msg,success=false){
- const el=document.getElementById(id);el.textContent=msg;el.classList.toggle("success-message",success);
+
+/* CURRENCY */
+function money(value){
+  return "RM " + Number(value || 0).toFixed(2);
 }
-function getLiked(){
- try{return JSON.parse(localStorage.getItem("shopiva_likes")||"[]");}catch{return [];}
+
+/* LIKES */
+function saveLikes(){
+  localStorage.setItem(
+    "shopiva_likes",
+    JSON.stringify(likedProducts)
+  );
 }
-function isLiked(id){return getLiked().includes(String(id));}
+
+function isLiked(id){
+  return likedProducts.includes(String(id));
+}
+
 function toggleLike(id){
- let liked=getLiked(),key=String(id);
- liked=liked.includes(key)?liked.filter(x=>x!==key):[...liked,key];
- localStorage.setItem("shopiva_likes",JSON.stringify(liked));
- renderCurrentPage();
-}
+  id = String(id);
 
-// SHARE SHOPIVA STORE
-async function shareShopiva(){
- const url=window.location.href;
- const shareData={title:"SHOPIVA — Affiliate Marketplace",text:"Jom terokai produk menarik di SHOPIVA!",url};
- try{
-  if(navigator.share && navigator.canShare && navigator.canShare(shareData)){
-   await navigator.share(shareData);
-  }else if(navigator.share){
-   await navigator.share({title:shareData.title,text:shareData.text,url});
+  if(isLiked(id)){
+    likedProducts = likedProducts.filter(x => x !== id);
   }else{
-   await navigator.clipboard.writeText(url);
-   alert("Pautan SHOPIVA berjaya disalin!");
+    likedProducts.push(id);
   }
- }catch(error){
-  if(error.name!=="AbortError"){
-   try{await navigator.clipboard.writeText(url);alert("Pautan SHOPIVA berjaya disalin!");}
-   catch{prompt("Salin pautan SHOPIVA ini:",url);}
+
+  saveLikes();
+
+  if(currentPage === "liked"){
+    renderPublic();
+  }else{
+    renderPublic();
   }
- }
 }
 
-// NAVIGATION
+/* SHARE */
+async function shareShopiva(){
+  const shareData = {
+    title:"SHOPIVA",
+    text:"Jom lihat produk pilihan di SHOPIVA!",
+    url:window.location.href
+  };
+
+  try{
+    if(navigator.share){
+      await navigator.share(shareData);
+    }else{
+      await navigator.clipboard.writeText(window.location.href);
+      alert("Pautan SHOPIVA berjaya disalin.");
+    }
+  }catch(error){
+    console.log("Share dibatalkan:",error);
+  }
+}
+
+/* NAVIGATION */
 function storeNav(page){
- stopAllFeedVideos();
- currentPage=page;
- ["homePage","videoPage","likedPage","mePage"].forEach(id=>document.getElementById(id).classList.add("hidden"));
- const ids={home:"homePage",video:"videoPage",liked:"likedPage",me:"mePage"};
- document.getElementById(ids[page]).classList.remove("hidden");
- ["home","video","liked","me"].forEach(n=>{
-  document.getElementById("nav"+n[0].toUpperCase()+n.slice(1)).classList.toggle("active",n===page);
- });
- document.getElementById("search").classList.toggle("hidden",page==="me");
- renderCurrentPage();
-}
-function renderCurrentPage(){
- if(currentPage==="home")renderProducts();
- if(currentPage==="video")renderVideoFeed();
- if(currentPage==="liked")renderLikedProducts();
-}
-function renderCategories(){
- document.getElementById("categories").innerHTML=categories.map(c=>`
- <button class="cat ${selectedCategory===c?"active":""}" onclick="selectCategory('${escapeHTML(c)}')">${escapeHTML(c)}</button>`).join("");
-}
-function selectCategory(c){selectedCategory=c;renderCategories();renderProducts();}
+  currentPage = page;
 
-// PRODUCT CARDS
-function productCard(p){
- const image=safeUrl(p.image_url),video=safeUrl(p.video_url),link=safeUrl(p.affiliate_url);
- const liked=isLiked(p.id);
- let media=video
- ?`<video class="video-player" autoplay muted loop playsinline preload="metadata"><source src="${escapeHTML(video)}"></video>`
- :image?`<img class="photo" src="${escapeHTML(image)}" alt="${escapeHTML(p.title)}" loading="lazy">`
- :`<div class="photo"></div>`;
- return `<article class="product">${media}<div class="product-info">
- <div class="product-name">${escapeHTML(p.title)}</div>
- <div class="product-like-row"><span class="platform">${escapeHTML(p.platform||"")}</span>
- <button class="like-btn ${liked?"liked":""}" onclick="toggleLike('${escapeHTML(p.id)}')">${liked?"♥":"♡"}</button></div>
- <div class="price">${formatPrice(p.price)}</div>
- ${link?`<a class="buy" href="${escapeHTML(link)}" target="_blank" rel="noopener noreferrer" onclick="trackClick('${escapeHTML(p.id)}')">Lihat Produk</a>`:""}
- </div></article>`;
-}
-function getSearch(){return document.getElementById("search").value.trim().toLowerCase();}
-function renderProducts(){
- const search=getSearch();
- const filtered=publicItems.filter(p=>(selectedCategory==="Semua"||p.category===selectedCategory)&&String(p.title).toLowerCase().includes(search));
- const featured=filtered.filter(p=>p.is_featured);
- document.getElementById("featured").innerHTML=featured.length?featured.map(productCard).join(""):`<div class="empty">Belum ada produk pilihan.</div>`;
- document.getElementById("products").innerHTML=filtered.length?filtered.map(productCard).join(""):`<div class="empty">Produk belum tersedia.</div>`;
-}
-function renderLikedProducts(){
- const search=getSearch();
- const liked=publicItems.filter(p=>isLiked(p.id)&&String(p.title).toLowerCase().includes(search));
- document.getElementById("likedProducts").innerHTML=liked.length?liked.map(productCard).join(""):`<div class="empty">Belum ada produk disukai. Tekan ikon hati pada produk.</div>`;
-}
-async function loadProducts(){
- const {data,error}=await db.from("products").select("*").eq("is_active",true).order("sort_order",{ascending:true}).order("created_at",{ascending:false});
- if(error){console.error(error);document.getElementById("products").textContent="Produk gagal dimuatkan.";return;}
- publicItems=data||[];renderCategories();renderCurrentPage();
-}
-async function trackClick(id){
- const {error}=await db.from("product_clicks").insert({product_id:id});
- if(error)console.error("Click tracking:",error.message);
-}
+  document.body.classList.toggle(
+    "video-mode",
+    page === "video"
+  );
 
-// FULL SCREEN VIDEO FEED
-function stopAllFeedVideos(){
- if(videoObserver){videoObserver.disconnect();videoObserver=null;}
- videoTimers.forEach(t=>clearTimeout(t));videoTimers.clear();
- document.querySelectorAll(".feed-video").forEach(v=>v.pause());
-}
-function renderVideoFeed(){
- stopAllFeedVideos();
- const search=getSearch();
- const videos=publicItems.filter(p=>safeUrl(p.video_url)&&String(p.title).toLowerCase().includes(search));
- const container=document.getElementById("videoProducts");
- if(!videos.length){container.innerHTML=`<div class="empty">Belum ada video produk.</div>`;return;}
-
- container.innerHTML=videos.map((p,i)=>`
- <section class="video-slide">
-  <video class="feed-video" muted loop playsinline autoplay preload="metadata">
-   <source src="${escapeHTML(safeUrl(p.video_url))}">
-  </video>
-  <button class="video-sound" onclick="toggleVideoSound(this)">🔇</button>
-  <div class="video-overlay">
-   <div class="video-title">${escapeHTML(p.title)}</div>
-   <div class="video-price">${formatPrice(p.price)}</div>
-   <a class="video-cta" href="${escapeHTML(safeUrl(p.affiliate_url))}" target="_blank" rel="noopener noreferrer" onclick="trackClick('${escapeHTML(p.id)}')">Lihat Produk</a>
-  </div>
- </section>`).join("");
-
- videoObserver=new IntersectionObserver(entries=>{
-  entries.forEach(entry=>{
-   const slide=entry.target,video=slide.querySelector("video");
-   const button=slide.querySelector(".video-cta");
-   const sound=slide.querySelector(".video-sound");
-   if(entry.isIntersecting&&entry.intersectionRatio>=0.6){
-    video.play().catch(()=>{});
-    if(videoTimers.has(slide))clearTimeout(videoTimers.get(slide));
-    button.classList.remove("show");
-    videoTimers.set(slide,setTimeout(()=>{
-     if(slide.isConnected)button.classList.add("show");
-    },3000));
-   }else{
-    video.pause();
-    if(videoTimers.has(slide))clearTimeout(videoTimers.get(slide));
-    videoTimers.delete(slide);
-    button.classList.remove("show");
-    if(sound)sound.textContent=video.muted?"🔇":"🔊";
-   }
+  document.querySelectorAll(".nav-item").forEach(item=>{
+    item.classList.remove("active");
   });
- },{root:container,threshold:[0,0.6,1]});
- container.querySelectorAll(".video-slide").forEach(s=>videoObserver.observe(s));
-}
-function toggleVideoSound(button){
- const video=button.closest(".video-slide").querySelector("video");
- video.muted=!video.muted;
- button.textContent=video.muted?"🔇":"🔊";
- if(!video.muted)video.play().catch(()=>{});
-}
 
-// LOGIN
-function openLogin(){
- hidePublicPages();
- document.getElementById("loginPanel").classList.remove("hidden");
- document.getElementById("bottomNav").classList.add("hidden");
- document.getElementById("search").classList.add("hidden");
-}
-function hidePublicPages(){["homePage","videoPage","likedPage","mePage"].forEach(id=>document.getElementById(id).classList.add("hidden"));}
-function closeLogin(){
- document.getElementById("loginPanel").classList.add("hidden");
- document.getElementById("bottomNav").classList.remove("hidden");
- document.getElementById("search").classList.remove("hidden");
- storeNav("me");
-}
-async function loginAdmin(){
- showMessage("loginMessage","Sedang log masuk...");
- const email=document.getElementById("loginEmail").value.trim();
- const password=document.getElementById("loginPassword").value;
- const {data,error}=await db.auth.signInWithPassword({email,password});
- if(error){showMessage("loginMessage",error.message);return;}
- if(data.user.id!==ADMIN_UID){await db.auth.signOut();showMessage("loginMessage","Akaun ini bukan admin SHOPIVA.");return;}
- adminUser=data.user;showDashboard();
-}
-function showDashboard(){
- hidePublicPages();
- document.getElementById("loginPanel").classList.add("hidden");
- document.getElementById("dashboard").classList.remove("hidden");
- document.getElementById("bottomNav").classList.add("hidden");
- document.getElementById("search").classList.add("hidden");
- loadAdminProducts();loadAdminStats();
-}
-function backToStore(){
- document.getElementById("dashboard").classList.add("hidden");
- document.getElementById("bottomNav").classList.remove("hidden");
- document.getElementById("search").classList.remove("hidden");
- storeNav("me");
-}
-async function logoutAdmin(){
- await db.auth.signOut();adminUser=null;
- document.getElementById("dashboard").classList.add("hidden");
- document.getElementById("bottomNav").classList.remove("hidden");
- document.getElementById("search").classList.remove("hidden");
- storeNav("home");
-}
+  const navMap = {
+    home:"navHome",
+    video:"navVideo",
+    liked:"navLiked",
+    me:"navMe"
+  };
 
-// UPLOAD
-async function uploadFile(file,bucket){
- if(!file)return null;
- const clean=file.name.replace(/[^a-zA-Z0-9._-]/g,"_");
- const path=crypto.randomUUID()+"-"+clean;
- const {error}=await db.storage.from(bucket).upload(path,file,{upsert:false});
- if(error)throw error;
- const {data}=db.storage.from(bucket).getPublicUrl(path);
- if(!data?.publicUrl)throw new Error("Pautan fail tidak dapat dijana.");
- return data.publicUrl;
-}
-
-// ADD / EDIT
-function resetProductForm(){
- editingProductId=null;
- document.getElementById("formHeading").textContent="Tambah Produk Baharu";
- document.getElementById("saveProductButton").textContent="Simpan Produk";
- document.getElementById("cancelEditButton").classList.add("hidden");
- document.getElementById("currentImageNote").textContent="";
- document.getElementById("currentVideoNote").textContent="";
- document.getElementById("productFeatured").checked=false;
- ["productTitle","productPrice","productLink","productImage","productVideo"].forEach(id=>document.getElementById(id).value="");
-}
-function cancelEdit(){resetProductForm();showMessage("productMessage","Edit dibatalkan.");}
-function editProduct(id){
- if(!adminUser||adminUser.id!==ADMIN_UID)return;
- const p=adminItems.find(x=>String(x.id)===String(id));if(!p)return;
- editingProductId=p.id;
- document.getElementById("formHeading").textContent="Edit Produk";
- document.getElementById("saveProductButton").textContent="Simpan Perubahan";
- document.getElementById("cancelEditButton").classList.remove("hidden");
- document.getElementById("productTitle").value=p.title||"";
- document.getElementById("productPrice").value=p.price||"";
- document.getElementById("productPlatform").value=p.platform||"shopee";
- document.getElementById("productCategory").value=p.category||"Lain-lain";
- document.getElementById("productLink").value=p.affiliate_url||"";
- document.getElementById("productFeatured").checked=!!p.is_featured;
- document.getElementById("productImage").value="";
- document.getElementById("productVideo").value="";
- document.getElementById("currentImageNote").textContent=p.image_url?"Gambar sedia ada dikekalkan jika tiada gambar baharu dipilih.":"Belum ada gambar.";
- document.getElementById("currentVideoNote").textContent=p.video_url?"Video sedia ada dikekalkan jika tiada video baharu dipilih.":"Belum ada video.";
- showMessage("productMessage","Sedang mengedit: "+p.title);
- document.getElementById("productFormPanel").scrollIntoView({behavior:"smooth"});
-}
-async function saveProduct(){
- if(!adminUser||adminUser.id!==ADMIN_UID){showMessage("productMessage","Sila log masuk sebagai admin.");return;}
- if(savingProduct)return;
- savingProduct=true;
- const button=document.getElementById("saveProductButton");
- button.disabled=true;button.textContent="Sedang menyimpan...";
- try{
-  const title=document.getElementById("productTitle").value.trim();
-  const price=Number(document.getElementById("productPrice").value);
-  const platform=document.getElementById("productPlatform").value;
-  const category=document.getElementById("productCategory").value;
-  const affiliate=safeUrl(document.getElementById("productLink").value.trim());
-  const imageFile=document.getElementById("productImage").files[0];
-  const videoFile=document.getElementById("productVideo").files[0];
-  if(!title||!Number.isFinite(price)||price<=0||!affiliate)throw new Error("Sila isi tajuk, harga dan pautan affiliate yang sah.");
-  if(imageFile&&imageFile.size>5*1024*1024)throw new Error("Gambar maksimum 5MB.");
-  if(videoFile&&videoFile.size>50*1024*1024)throw new Error("Video maksimum 50MB.");
-  if(imageFile&&!["image/jpeg","image/png","image/webp"].includes(imageFile.type))throw new Error("Format gambar mestilah JPG, PNG atau WebP.");
-  if(videoFile&&!["video/mp4","video/webm"].includes(videoFile.type))throw new Error("Format video mestilah MP4 atau WebM.");
-  showMessage("productMessage","Sedang memuat naik media...");
-  let imageUrl=null,videoUrl=null;
-  if(editingProductId){
-   const old=adminItems.find(p=>String(p.id)===String(editingProductId));
-   imageUrl=old?.image_url||null;videoUrl=old?.video_url||null;
+  if(navMap[page] && $(navMap[page])){
+    $(navMap[page]).classList.add("active");
   }
-  if(imageFile)imageUrl=await uploadFile(imageFile,"product-images");
-  if(videoFile)videoUrl=await uploadFile(videoFile,"product-videos");
-  const payload={title,price,platform,category,affiliate_url:affiliate,image_url:imageUrl,video_url:videoUrl,is_featured:document.getElementById("productFeatured").checked};
-  const result=editingProductId
-   ?await db.from("products").update(payload).eq("id",editingProductId)
-   :await db.from("products").insert({...payload,is_active:true});
-  if(result.error)throw result.error;
-  showMessage("productMessage",editingProductId?"Produk berjaya dikemas kini!":"Produk berjaya disimpan!",true);
-  resetProductForm();await loadProducts();await loadAdminProducts();await loadAdminStats();
- }catch(error){
-  console.error(error);showMessage("productMessage","Ralat: "+error.message);
- }finally{
-  savingProduct=false;button.disabled=false;
-  button.textContent=editingProductId?"Simpan Perubahan":"Simpan Produk";
- }
+
+  const sections = [
+    "homePage",
+    "videoPage",
+    "likedPage",
+    "mePage",
+    "categoriesPage"
+  ];
+
+  sections.forEach(id=>{
+    const el = $(id);
+    if(el) el.style.display = "none";
+  });
+
+  if(page !== "video"){
+    stopAllFeedVideos();
+  }
+
+  if(page === "home"){
+    if($("homePage")) $("homePage").style.display = "block";
+    renderPublic();
+  }
+
+  if(page === "video"){
+    if($("videoPage")) $("videoPage").style.display = "block";
+    renderVideoFeed();
+  }
+
+  if(page === "liked"){
+    if($("likedPage")) $("likedPage").style.display = "block";
+    renderPublic();
+  }
+
+  if(page === "me"){
+    if($("mePage")) $("mePage").style.display = "block";
+    renderMePage();
+  }
+
+  if(page === "categories"){
+    if($("categoriesPage")) $("categoriesPage").style.display = "block";
+    renderCategories();
+  }
 }
 
-// ADMIN LIST
+/* CATEGORY LIST */
+const SHOPIVA_CATEGORIES = [
+  "Semua",
+  "Kecantikan",
+  "Skincare",
+  "Kesihatan",
+  "Fesyen",
+  "Elektronik",
+  "Rumah & Dapur",
+  "Ibu & Anak",
+  "Makanan & Minuman",
+  "Gajet",
+  "Lain-lain"
+];
+
+function renderCategories(){
+  const container = $("categoryGrid");
+  if(!container) return;
+
+  container.innerHTML = SHOPIVA_CATEGORIES.map(category=>`
+    <button class="category-tile"
+      onclick="selectCategory('${escapeHTML(category)}')">
+      <span>${category === "Semua" ? "🛍️" :
+        category === "Kecantikan" ? "💄" :
+        category === "Skincare" ? "🧴" :
+        category === "Kesihatan" ? "🌿" :
+        category === "Fesyen" ? "👗" :
+        category === "Elektronik" ? "📱" :
+        category === "Rumah & Dapur" ? "🏠" :
+        category === "Ibu & Anak" ? "🍼" :
+        category === "Makanan & Minuman" ? "🍜" :
+        category === "Gajet" ? "🎧" : "✨"}</span>
+      <small>${escapeHTML(category)}</small>
+    </button>
+  `).join("");
+}
+
+function selectCategory(category){
+  selectedCategory = category;
+  storeNav("home");
+}
+
+/* PRODUCT CARD */
+function card(product,manage=false){
+  const image = safeUrl(product.image_url);
+  const video = safeUrl(product.video_url);
+  const liked = isLiked(product.id);
+
+  const media = video
+    ? `<video src="${video}" muted playsinline preload="metadata"></video>`
+    : image
+      ? `<img src="${image}" alt="${escapeHTML(product.name)}" loading="lazy">`
+      : `<div class="no-image">SHOPIVA</div>`;
+
+  return `
+    <article class="public-product-card">
+      <div class="photo">
+        ${media}
+
+        ${product.is_featured ? `
+          <span class="featured-label">PILIHAN SHOPIVA</span>
+        ` : ""}
+
+        ${!manage ? `
+          <button class="like-btn ${liked ? "liked" : ""}"
+            onclick="toggleLike('${product.id}')">
+            ${liked ? "♥" : "♡"}
+          </button>
+        ` : ""}
+      </div>
+
+      <div class="product-info">
+        <h3>${escapeHTML(product.name)}</h3>
+        <div class="product-price">${money(product.price)}</div>
+
+        ${manage ? "" : `
+          <button class="buy-button"
+            onclick="openProduct('${product.id}')">
+            Lihat Produk
+          </button>
+        `}
+      </div>
+    </article>
+  `;
+}
+
+/* RENDER PUBLIC PRODUCTS */
+function renderPublic(){
+  let items = [...publicItems];
+
+  items = items.filter(product=>product.is_active !== false);
+
+  if(currentPage === "liked"){
+    items = items.filter(product=>isLiked(product.id));
+  }
+
+  if(selectedCategory !== "Semua"){
+    items = items.filter(product=>
+      product.category === selectedCategory
+    );
+  }
+
+  if(likedOnly){
+    items = items.filter(product=>isLiked(product.id));
+  }
+
+  const search = $("productSearch");
+  if(search && search.value.trim()){
+    const term = search.value.toLowerCase().trim();
+    items = items.filter(product=>
+      String(product.name || "").toLowerCase().includes(term)
+    );
+  }
+
+  const featured = items.filter(product=>product.is_featured);
+  const regular = items.filter(product=>!product.is_featured);
+
+  const featuredContainer = $("featuredProducts");
+  const productContainer = $("publicProducts");
+
+  if(featuredContainer){
+    featuredContainer.innerHTML = featured.map(p=>card(p)).join("");
+  }
+
+  if(productContainer){
+    productContainer.innerHTML = regular.map(p=>card(p)).join("");
+  }
+
+  const empty = $("emptyProducts");
+  if(empty){
+    empty.style.display = items.length ? "none" : "block";
+  }
+}
+
+/* OPEN AFFILIATE PRODUCT */
+async function openProduct(id){
+  const product = publicItems.find(
+    item=>String(item.id) === String(id)
+  );
+
+  if(!product) return;
+
+  try{
+    await db.from("product_clicks").insert({
+      product_id:product.id
+    });
+  }catch(error){
+    console.log("Click tracking:",error);
+  }
+
+  const link = safeUrl(product.affiliate_link);
+
+  if(link){
+    window.open(link,"_blank","noopener,noreferrer");
+  }else{
+    alert("Pautan produk belum tersedia.");
+  }
+}
+
+/* LOAD PUBLIC PRODUCTS */
+async function loadProducts(){
+  try{
+    const {data,error} = await db
+      .from("products")
+      .select("*")
+      .eq("is_active",true)
+      .order("sort_order",{ascending:true})
+      .order("created_at",{ascending:false});
+
+    if(error) throw error;
+
+    publicItems = data || [];
+
+    renderPublic();
+  }catch(error){
+    console.error("Load products:",error);
+    alert("Tidak berjaya memuatkan produk. Sila cuba semula.");
+  }
+}
+
+/* SEARCH */
+if($("productSearch")){
+  $("productSearch").addEventListener("input",renderPublic);
+}
+
+/* =========================================
+   SHOPIVA FULLSCREEN VIDEO FEED
+========================================= */
+
+function stopAllFeedVideos(){
+  if(videoObserver){
+    videoObserver.disconnect();
+    videoObserver = null;
+  }
+
+  videoTimers.forEach(timer=>clearTimeout(timer));
+  videoTimers = [];
+
+  document.querySelectorAll(".feed-video").forEach(video=>{
+    video.pause();
+    video.currentTime = 0;
+  });
+
+  activeVideo = null;
+}
+
+/* CREATE VIDEO FEED */
+function renderVideoFeed(){
+  stopAllFeedVideos();
+
+  const feed = $("videoFeed");
+  if(!feed) return;
+
+  const videos = publicItems.filter(product=>
+    product.is_active !== false &&
+    product.video_url &&
+    safeUrl(product.video_url)
+  );
+
+  if(!videos.length){
+    feed.innerHTML = `
+      <div class="video-empty">
+        <h3>Belum ada video produk</h3>
+        <p>Video produk akan dipaparkan di sini.</p>
+      </div>
+    `;
+    return;
+  }
+
+  feed.innerHTML = videos.map(product=>`
+    <section class="video-slide" data-product="${product.id}">
+
+      <video
+        class="feed-video"
+        src="${safeUrl(product.video_url)}"
+        playsinline
+        webkit-playsinline
+        muted
+        loop
+        preload="metadata">
+      </video>
+
+      <div class="video-overlay"></div>
+
+      <button class="video-sound"
+        onclick="toggleVideoSound(this)">
+        🔇
+      </button>
+
+      <div class="video-details">
+        <h3>${escapeHTML(product.name)}</h3>
+        <p>${money(product.price)}</p>
+
+        <button class="video-buy"
+          onclick="openProduct('${product.id}')">
+          Lihat Produk
+        </button>
+      </div>
+
+      <div class="video-progress"></div>
+    </section>
+  `).join("");
+
+  startVideoObserver();
+}
+
+/* AUTOPLAY WHEN VISIBLE */
+function startVideoObserver(){
+  const feed = $("videoFeed");
+  if(!feed) return;
+
+  videoObserver = new IntersectionObserver(entries=>{
+    entries.forEach(entry=>{
+      const video = entry.target.querySelector(".feed-video");
+      const slide = entry.target;
+
+      if(!video) return;
+
+      if(entry.isIntersecting && entry.intersectionRatio >= 0.6){
+
+        document.querySelectorAll(".feed-video").forEach(other=>{
+          if(other !== video){
+            other.pause();
+          }
+        });
+
+        activeVideo = video;
+
+        video.muted = !videoSoundOn;
+
+        const playPromise = video.play();
+        if(playPromise){
+          playPromise.catch(error=>{
+            console.log("Autoplay:",error);
+          });
+        }
+
+        const buyButton = slide.querySelector(".video-buy");
+        if(buyButton){
+          buyButton.style.opacity = "0";
+          buyButton.style.pointerEvents = "none";
+
+          const timer = setTimeout(()=>{
+            buyButton.style.opacity = "1";
+            buyButton.style.pointerEvents = "auto";
+          },3000);
+
+          videoTimers.push(timer);
+        }
+
+      }else{
+        video.pause();
+      }
+    });
+  },{
+    root:feed,
+    threshold:[0,0.6,1]
+  });
+
+  document.querySelectorAll(".video-slide").forEach(slide=>{
+    videoObserver.observe(slide);
+  });
+}
+
+/* SOUND CONTROL */
+function toggleVideoSound(button){
+  videoSoundOn = !videoSoundOn;
+
+  document.querySelectorAll(".feed-video").forEach(video=>{
+    video.muted = !videoSoundOn;
+  });
+
+  document.querySelectorAll(".video-sound").forEach(btn=>{
+    btn.textContent = videoSoundOn ? "🔊" : "🔇";
+  });
+
+  if(activeVideo && activeVideo.paused){
+    activeVideo.play().catch(()=>{});
+  }
+}
+/* END PART 2 — PART 3 CONTINUES BELOW */
+ 
+/* =========================================
+   SHOPIVA — PART 3
+   ADMIN LOGIN, DASHBOARD & PRODUCT MANAGEMENT
+========================================= */
+
+/* ADMIN LOGIN */
+async function loginAdmin(){
+  const email = $("loginEmail")?.value.trim();
+  const password = $("loginPassword")?.value;
+
+  if(!email || !password){
+    alert("Sila masukkan email dan password.");
+    return;
+  }
+
+  const button = $("loginButton");
+  if(button){
+    button.disabled = true;
+    button.textContent = "Sedang log masuk...";
+  }
+
+  try{
+    const {data,error} = await db.auth.signInWithPassword({
+      email,
+      password
+    });
+
+    if(error) throw error;
+
+    if(data.user.id !== ADMIN_UID){
+      await db.auth.signOut();
+      throw new Error("Akaun ini bukan akaun admin SHOPIVA.");
+    }
+
+    currentUser = data.user;
+    showDashboard();
+
+  }catch(error){
+    alert("Log masuk gagal: " + error.message);
+  }finally{
+    if(button){
+      button.disabled = false;
+      button.textContent = "Log Masuk";
+    }
+  }
+}
+
+/* SHOW LOGIN */
+function showLogin(){
+  if($("loginPanel")) $("loginPanel").style.display = "block";
+  if($("dashboard")) $("dashboard").style.display = "none";
+}
+
+/* SHOW DASHBOARD */
+async function showDashboard(){
+  if(!currentUser || currentUser.id !== ADMIN_UID){
+    showLogin();
+    return;
+  }
+
+  if($("loginPanel")) $("loginPanel").style.display = "none";
+  if($("dashboard")) $("dashboard").style.display = "block";
+
+  await loadAdminProducts();
+  await loadAdminStats();
+}
+
+/* LOGOUT */
+async function logoutAdmin(){
+  const confirmLogout = confirm("Anda pasti mahu log keluar?");
+  if(!confirmLogout) return;
+
+  stopAllFeedVideos();
+
+  const {error} = await db.auth.signOut();
+
+  if(error){
+    alert("Tidak berjaya log keluar: " + error.message);
+    return;
+  }
+
+  currentUser = null;
+  showLogin();
+}
+
+/* ADMIN CHECK */
+function requireAdmin(){
+  if(!currentUser || currentUser.id !== ADMIN_UID){
+    alert("Akses admin diperlukan.");
+    return false;
+  }
+  return true;
+}
+
+/* UPLOAD IMAGE / VIDEO */
+async function uploadFile(file,bucket){
+  if(!file) return null;
+
+  if(!requireAdmin()) return null;
+
+  const allowedTypes = bucket === "product-videos"
+    ? ["video/mp4","video/webm","video/quicktime"]
+    : ["image/jpeg","image/png","image/webp"];
+
+  if(!allowedTypes.includes(file.type)){
+    throw new Error("Format fail tidak disokong.");
+  }
+
+  const maxSize = bucket === "product-videos"
+    ? 100 * 1024 * 1024
+    : 5 * 1024 * 1024;
+
+  if(file.size > maxSize){
+    throw new Error(
+      bucket === "product-videos"
+        ? "Video melebihi had 100MB."
+        : "Gambar melebihi had 5MB."
+    );
+  }
+
+  const extension = file.name.split(".").pop().toLowerCase();
+  const filePath =
+    Date.now() + "-" +
+    Math.random().toString(36).slice(2,10) +
+    "." + extension;
+
+  const {error:uploadError} = await db.storage
+    .from(bucket)
+    .upload(filePath,file,{
+      cacheControl:"3600",
+      upsert:false,
+      contentType:file.type
+    });
+
+  if(uploadError) throw uploadError;
+
+  const {data} = db.storage
+    .from(bucket)
+    .getPublicUrl(filePath);
+
+  return data.publicUrl;
+}
+
+/* IMAGE PREVIEW */
+if($("productImage")){
+  $("productImage").addEventListener("change",event=>{
+    const file = event.target.files?.[0];
+    const preview = $("imagePreview");
+
+    if(!preview) return;
+
+    if(!file){
+      preview.innerHTML = "";
+      return;
+    }
+
+    const localUrl = URL.createObjectURL(file);
+
+    preview.innerHTML = `
+      <img src="${localUrl}"
+        style="width:100px;height:100px;object-fit:cover;border-radius:12px">
+    `;
+  });
+}
+
+/* VIDEO PREVIEW */
+if($("productVideo")){
+  $("productVideo").addEventListener("change",event=>{
+    const file = event.target.files?.[0];
+    const preview = $("videoPreview");
+
+    if(!preview) return;
+
+    if(!file){
+      preview.innerHTML = "";
+      return;
+    }
+
+    const localUrl = URL.createObjectURL(file);
+
+    preview.innerHTML = `
+      <video src="${localUrl}" controls playsinline
+        style="width:150px;max-height:180px;border-radius:12px">
+      </video>
+    `;
+  });
+}
+
+/* RESET PRODUCT FORM */
+function resetProductForm(){
+  editingProductId = null;
+
+  [
+    "productTitle",
+    "productPrice",
+    "productPlatform",
+    "productCategory",
+    "productLink",
+    "productImage",
+    "productVideo",
+    "productFeatured"
+  ].forEach(id=>{
+    const el = $(id);
+    if(!el) return;
+
+    if(el.type === "checkbox"){
+      el.checked = false;
+    }else{
+      el.value = "";
+    }
+  });
+
+  if($("imagePreview")) $("imagePreview").innerHTML = "";
+  if($("videoPreview")) $("videoPreview").innerHTML = "";
+
+  if($("saveProductButton")){
+    $("saveProductButton").textContent = "Tambah Produk";
+  }
+}
+
+/* ADD / UPDATE PRODUCT */
+async function addProduct(){
+  if(!requireAdmin()) return;
+
+  const name = $("productTitle")?.value.trim();
+  const price = Number($("productPrice")?.value);
+  const platform = $("productPlatform")?.value;
+  const category = $("productCategory")?.value;
+  const affiliateLink = $("productLink")?.value.trim();
+
+  if(!name || !price || price <= 0 || !affiliateLink){
+    alert("Sila lengkapkan nama, harga dan pautan produk.");
+    return;
+  }
+
+  const button = $("saveProductButton");
+
+  if(button){
+    button.disabled = true;
+    button.textContent = "Menyimpan...";
+  }
+
+  try{
+    const imageFile = $("productImage")?.files?.[0];
+    const videoFile = $("productVideo")?.files?.[0];
+
+    let imageUrl = "";
+    let videoUrl = "";
+
+    if(editingProductId){
+      const existing = adminItems.find(
+        p=>String(p.id) === String(editingProductId)
+      );
+
+      imageUrl = existing?.image_url || "";
+      videoUrl = existing?.video_url || "";
+    }
+
+    if(imageFile){
+      imageUrl = await uploadFile(imageFile,"product-images");
+    }
+
+    if(videoFile){
+      videoUrl = await uploadFile(videoFile,"product-videos");
+    }
+
+    const productData = {
+      name,
+      price,
+      platform,
+      category,
+      affiliate_link:affiliateLink,
+      image_url:imageUrl || null,
+      video_url:videoUrl || null,
+      is_featured:$("productFeatured")?.checked || false,
+      is_active:true
+    };
+
+    let result;
+
+    if(editingProductId){
+      result = await db
+        .from("products")
+        .update(productData)
+        .eq("id",editingProductId);
+    }else{
+      result = await db
+        .from("products")
+        .insert(productData);
+    }
+
+    if(result.error) throw result.error;
+
+    alert(editingProductId
+      ? "Produk berjaya dikemaskini!"
+      : "Produk berjaya ditambah!"
+    );
+
+    resetProductForm();
+
+    await loadProducts();
+    await loadAdminProducts();
+    await loadAdminStats();
+
+  }catch(error){
+    console.error("Save product:",error);
+    alert("Tidak berjaya menyimpan produk: " + error.message);
+  }finally{
+    if(button){
+      button.disabled = false;
+      button.textContent = editingProductId
+        ? "Kemaskini Produk"
+        : "Tambah Produk";
+    }
+  }
+}
+
+/* LOAD ADMIN PRODUCTS */
 async function loadAdminProducts(){
- if(!adminUser||adminUser.id!==ADMIN_UID)return;
- const container=document.getElementById("adminProducts");
- container.textContent="Memuatkan produk...";
- const {data,error}=await db.from("products").select("*").order("created_at",{ascending:false});
- if(error){container.textContent=error.message;return;}
- adminItems=data||[];
- if(!adminItems.length){container.innerHTML=`<div class="empty">Belum ada produk.</div>`;return;}
- container.innerHTML=adminItems.map(p=>{
-  const image=safeUrl(p.image_url),video=safeUrl(p.video_url);
-  return `<div class="product-row">
-   <div class="admin-product-top">
-    ${image?`<img class="admin-thumb" src="${escapeHTML(image)}" alt="">`:`<div class="admin-no-image">Tiada gambar</div>`}
-    <div class="admin-product-details">
-     <div class="admin-product-title">${escapeHTML(p.title)}</div>
-     <div class="field-label">${formatPrice(p.price)} · ${escapeHTML(p.platform)}</div>
-     <div class="field-label">${p.is_active?"Aktif":"Tidak aktif"}</div>
-    </div>
-   </div>
-   ${video?`<div><div class="admin-media-label">Video produk</div><video class="admin-media-video" controls playsinline preload="metadata"><source src="${escapeHTML(video)}"></video></div>`:`<div class="admin-media-label">Tiada video produk</div>`}
-   <div class="admin-actions">
-    <button class="edit-btn" onclick="editProduct('${escapeHTML(p.id)}')">Edit</button>
-    <button class="delete-btn" onclick="deleteProduct('${escapeHTML(p.id)}')">Padam</button>
-   </div>
-  </div>`;
- }).join("");
-}
-async function deleteProduct(id){
- if(!adminUser||adminUser.id!==ADMIN_UID)return;
- if(!confirm("Padam produk ini?"))return;
- const {error}=await db.from("products").delete().eq("id",id);
- if(error){alert(error.message);return;}
- await loadProducts();await loadAdminProducts();await loadAdminStats();
-}
-async function loadAdminStats(){
- if(!adminUser||adminUser.id!==ADMIN_UID)return;
- const [products,clicks,sales]=await Promise.all([
-  db.from("products").select("*",{count:"exact",head:true}),
-  db.from("product_clicks").select("*",{count:"exact",head:true}),
-  db.from("affiliate_sales").select("commission,status")
- ]);
- const commission=(sales.data||[]).filter(s=>s.status==="approved").reduce((sum,s)=>sum+Number(s.commission),0);
- document.getElementById("adminStats").textContent="Produk: "+(products.count||0)+" | Klik: "+(clicks.count||0)+" | Komisen diluluskan: RM"+commission.toFixed(2);
+  if(!requireAdmin()) return;
+
+  try{
+    const {data,error} = await db
+      .from("products")
+      .select("*")
+      .order("created_at",{ascending:false});
+
+    if(error) throw error;
+
+    adminItems = data || [];
+
+    const container = $("adminProducts");
+    if(!container) return;
+
+    if(!adminItems.length){
+      container.innerHTML = "<p>Belum ada produk.</p>";
+      return;
+    }
+
+    container.innerHTML = adminItems.map(product=>`
+      <div class="admin-product-row">
+        <div class="admin-product-image">
+          ${
+            safeUrl(product.image_url)
+              ? `<img src="${safeUrl(product.image_url)}" alt="">`
+              : "📦"
+          }
+        </div>
+
+        <div class="admin-product-info">
+          <strong>${escapeHTML(product.name)}</strong>
+          <p>${money(product.price)}</p>
+          <small>${escapeHTML(product.platform || "")}</small>
+          <small>${product.is_active ? "Aktif" : "Tidak aktif"}</small>
+        </div>
+
+        <div class="admin-product-actions">
+          <button onclick="editProduct('${product.id}')">Edit</button>
+          <button onclick="deleteProduct('${product.id}')">Padam</button>
+        </div>
+      </div>
+    `).join("");
+
+  }catch(error){
+    console.error("Admin products:",error);
+    alert("Gagal memuatkan senarai produk: " + error.message);
+  }
 }
 
-// START
-async function initShopiva(){
- await loadProducts();
- const {data,error}=await db.auth.getSession();
- if(error){console.error(error);return;}
- if(data.session&&data.session.user.id===ADMIN_UID){adminUser=data.session.user;showDashboard();}
+/* EDIT PRODUCT */
+function editProduct(id){
+  if(!requireAdmin()) return;
+
+  const product = adminItems.find(
+    p=>String(p.id) === String(id)
+  );
+
+  if(!product) return;
+
+  editingProductId = product.id;
+
+  if($("productTitle")) $("productTitle").value = product.name || "";
+  if($("productPrice")) $("productPrice").value = product.price || "";
+  if($("productPlatform")) $("productPlatform").value = product.platform || "";
+  if($("productCategory")) $("productCategory").value = product.category || "";
+  if($("productLink")) $("productLink").value = product.affiliate_link || "";
+  if($("productFeatured")) $("productFeatured").checked = !!product.is_featured;
+
+  if($("productImage")) $("productImage").value = "";
+  if($("productVideo")) $("productVideo").value = "";
+
+  if($("imagePreview")){
+    $("imagePreview").innerHTML = product.image_url
+      ? `<img src="${safeUrl(product.image_url)}" style="width:100px;height:100px;object-fit:cover;border-radius:12px">`
+      : "";
+  }
+
+  if($("videoPreview")){
+    $("videoPreview").innerHTML = product.video_url
+      ? `<video src="${safeUrl(product.video_url)}" controls playsinline style="width:150px;max-height:180px;border-radius:12px"></video>`
+      : "";
+  }
+
+  if($("saveProductButton")){
+    $("saveProductButton").textContent = "Kemaskini Produk";
+  }
+
+  window.scrollTo({top:0,behavior:"smooth"});
 }
+
+/* DELETE PRODUCT */
+async function deleteProduct(id){
+  if(!requireAdmin()) return;
+
+  const confirmed = confirm(
+    "Anda pasti mahu memadam produk ini?"
+  );
+
+  if(!confirmed) return;
+
+  try{
+    const {error} = await db
+      .from("products")
+      .delete()
+      .eq("id",id);
+
+    if(error) throw error;
+
+    alert("Produk berjaya dipadam.");
+
+    await loadProducts();
+    await loadAdminProducts();
+    await loadAdminStats();
+
+  }catch(error){
+    alert("Gagal memadam produk: " + error.message);
+  }
+}
+
+/* DASHBOARD STATISTICS */
+async function loadAdminStats(){
+  if(!requireAdmin()) return;
+
+  try{
+    const [productsResult,clicksResult,salesResult] =
+      await Promise.all([
+        db.from("products").select("id,is_active"),
+        db.from("product_clicks").select("id"),
+        db.from("affiliate_sales").select("*")
+      ]);
+
+    if(productsResult.error) throw productsResult.error;
+    if(clicksResult.error) throw clicksResult.error;
+    if(salesResult.error) throw salesResult.error;
+
+    const products = productsResult.data || [];
+    const clicks = clicksResult.data || [];
+    const sales = salesResult.data || [];
+
+    const activeCount = products.filter(
+      p=>p.is_active !== false
+    ).length;
+
+    const setText = (id,value)=>{
+      if($(id)) $(id).textContent = value;
+    };
+
+    setText("statProducts",products.length);
+    setText("statActiveProducts",activeCount);
+    setText("statClicks",clicks.length);
+    setText("statSales",sales.length);
+
+  }catch(error){
+    console.error("Dashboard stats:",error);
+  }
+}
+
+/* ME PAGE */
+function renderMePage(){
+  const container = $("mePage");
+  if(!container) return;
+
+  if(currentUser && currentUser.id === ADMIN_UID){
+    container.innerHTML = `
+      <div class="me-panel">
+        <h2>Admin SHOPIVA</h2>
+        <p>${escapeHTML(currentUser.email || "")}</p>
+        <button onclick="showDashboard()">Dashboard Admin</button>
+        <button onclick="logoutAdmin()">Log Keluar</button>
+      </div>
+    `;
+  }else{
+    container.innerHTML = `
+      <div class="me-panel">
+        <h2>Selamat datang ke SHOPIVA</h2>
+        <p>Platform pilihan produk affiliate.</p>
+        <button onclick="showLogin()">Admin Login</button>
+      </div>
+    `;
+  }
+}
+
+/* AUTH STATE */
+async function initShopiva(){
+  try{
+    const {data,error} = await db.auth.getSession();
+
+    if(error) throw error;
+
+    const session = data.session;
+
+    if(session && session.user.id === ADMIN_UID){
+      currentUser = session.user;
+      showDashboard();
+    }else{
+      if(session){
+        await db.auth.signOut();
+      }
+
+      currentUser = null;
+      showLogin();
+    }
+
+    await loadProducts();
+
+    if(currentPage === "video"){
+      renderVideoFeed();
+    }
+
+  }catch(error){
+    console.error("SHOPIVA initialization:",error);
+    showLogin();
+  }
+}
+
+/* AUTH LISTENER */
 db.auth.onAuthStateChange((event,session)=>{
- if(event==="SIGNED_OUT")adminUser=null;
+  if(event === "SIGNED_OUT"){
+    currentUser = null;
+    showLogin();
+  }
+
+  if(event === "SIGNED_IN" && session){
+    if(session.user.id === ADMIN_UID){
+      currentUser = session.user;
+      showDashboard();
+    }else{
+      db.auth.signOut();
+    }
+  }
 });
-initShopiva();
+
+/* START SHOPIVA */
+document.addEventListener("DOMContentLoaded",()=>{
+  initShopiva();
+});
+
+/* END SHOPIVA */
 </script>
 </body>
 </html>
