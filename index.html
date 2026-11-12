@@ -198,7 +198,470 @@ async function recordVisit(){try{if(sessionStorage.getItem("shopiva_visit_record
 function setupPreviews(){["productImage","productVideo"].forEach(id=>$(id)?.addEventListener("change",event=>{const file=event.target.files?.[0],isImage=id==="productImage",box=$(isImage?"imagePreview":"videoPreview");box.innerHTML="";if(!file)return;const valid=isImage?file.type.startsWith("image/"):file.type.startsWith("video/");if(!valid)return;const url=URL.createObjectURL(file);previewObjectUrls.push(url);box.innerHTML=isImage?`<img class="preview-image" src="${url}" alt="Preview">`:`<video class="preview-video" src="${url}" controls playsinline></video>`}))}
 let authEventBusy=false;
 db.auth.onAuthStateChange((event,session)=>{if(event==="SIGNED_OUT"){currentUser=null;showLogin();renderMePage();return}if(session?.user?.id===ADMIN_UID){currentUser=session.user;setVisible($("loginPanel"),false);showDashboard();renderMePage()}else if(event==="SIGNED_IN"&&session?.user){if(authEventBusy)return;authEventBusy=true;db.auth.signOut().finally(()=>{authEventBusy=false})}});
-async function initShopiva(){await loadProducts();recordVisit();try{const {data,error}=await db.auth.getSession();if(error)throw error;const session=data?.session;if(session?.user?.id===ADMIN_UID){currentUser=session.user;showDashboard()}else{currentUser=null;if(session?.user)await db.auth.signOut();showLogin()}renderMePage()}catch(e){console.error("INIT ERROR",e);currentUser=null;showLogin();renderMePage()}}
+
+/* =====================================
+   SHOPIVA VIDEO SOCIAL FEATURES
+===================================== */
+
+let videoLikeData={};
+let activeCommentProductId=null;
+let videoWatchTimers=new Map();
+
+try{
+  videoLikeData=JSON.parse(
+    localStorage.getItem("shopiva_video_likes")||"{}"
+  )||{};
+}catch(e){
+  videoLikeData={};
+}
+
+function saveVideoLikes(){
+  try{
+    localStorage.setItem(
+      "shopiva_video_likes",
+      JSON.stringify(videoLikeData)
+    );
+  }catch(e){
+    console.warn("Video likes storage error",e);
+  }
+}
+
+function isVideoLiked(id){
+  return !!videoLikeData[String(id)];
+}
+
+function toggleVideoLike(id,button){
+  id=String(id);
+
+  if(isVideoLiked(id)){
+    delete videoLikeData[id];
+  }else{
+    videoLikeData[id]=true;
+  }
+
+  saveVideoLikes();
+
+  const liked=isVideoLiked(id);
+
+  if(button){
+    button.classList.toggle("liked",liked);
+    button.querySelector(".action-icon").textContent=
+      liked?"♥":"♡";
+  }
+}
+
+async function shareVideo(id){
+  const p=publicItems.find(
+    item=>String(item.id)===String(id)
+  );
+
+  if(!p)return;
+
+  const link=safeUrl(p.affiliate_url)||location.href;
+
+  const data={
+    title:p.title||"Produk SHOPIVA",
+    text:"Jom lihat produk ini di SHOPIVA!",
+    url:link
+  };
+
+  if(navigator.share){
+    try{
+      await navigator.share(data);
+    }catch(e){
+      if(e.name!=="AbortError"){
+        console.warn("Share error",e);
+      }
+    }
+    return;
+  }
+
+  try{
+    await navigator.clipboard.writeText(link);
+    notify("Pautan produk berjaya disalin.");
+  }catch(e){
+    notify(link);
+  }
+}
+
+/* COMMENT MODAL */
+
+function ensureVideoCommentModal(){
+  if($("videoCommentModal"))return;
+
+  const modal=document.createElement("div");
+
+  modal.id="videoCommentModal";
+  modal.className="video-comments hidden";
+
+  modal.innerHTML=`
+    <div class="video-comments-panel">
+      <div class="video-comments-head">
+        <strong id="videoCommentTitle">Komen</strong>
+        <button type="button"
+          onclick="closeVideoComments()"
+          style="border:0;background:none;font-size:23px">
+          ×
+        </button>
+      </div>
+
+      <div id="videoCommentsList"
+        class="video-comments-list">
+        Memuatkan komen...
+      </div>
+
+      <form class="video-comment-form"
+        onsubmit="postVideoComment(event)">
+        <input id="videoCommentInput"
+          type="text"
+          maxlength="500"
+          placeholder="Tulis komen..."
+          required>
+        <button type="submit"
+          id="videoCommentSend">
+          Hantar
+        </button>
+      </form>
+    </div>
+  `;
+
+  modal.addEventListener("click",event=>{
+    if(event.target===modal){
+      closeVideoComments();
+    }
+  });
+
+  document.body.appendChild(modal);
+}
+
+async function openVideoComments(id){
+  ensureVideoCommentModal();
+
+  activeCommentProductId=String(id);
+
+  const product=publicItems.find(
+    p=>String(p.id)===String(id)
+  );
+
+  $("videoCommentTitle").textContent=
+    "Komen · "+(product?.title||"Produk");
+
+  $("videoCommentsList").textContent=
+    "Memuatkan komen...";
+
+  $("videoCommentInput").value="";
+
+  setVisible($("videoCommentModal"),true);
+
+  try{
+    const {data,error}=await db
+      .from("product_video_comments")
+      .select("id,message,created_at")
+      .eq("product_id",activeCommentProductId)
+      .order("created_at",{ascending:false});
+
+    if(error)throw error;
+
+    const list=$("videoCommentsList");
+
+    if(!data||!data.length){
+      list.innerHTML=
+        '<div class="empty">Belum ada komen. Jadilah yang pertama!</div>';
+      return;
+    }
+
+    list.innerHTML=data.map(item=>`
+      <div class="video-comment">
+        <strong>Pengunjung SHOPIVA</strong>
+        <div>${escapeHTML(item.message)}</div>
+        <small>${new Date(item.created_at).toLocaleString("ms-MY")}</small>
+      </div>
+    `).join("");
+
+  }catch(e){
+    console.error("LOAD COMMENTS ERROR",e);
+
+    $("videoCommentsList").textContent=
+      "Gagal memuatkan komen: "+e.message;
+  }
+}
+
+function closeVideoComments(){
+  setVisible($("videoCommentModal"),false);
+  activeCommentProductId=null;
+}
+
+async function postVideoComment(event){
+  event.preventDefault();
+
+  if(!activeCommentProductId)return;
+
+  const input=$("videoCommentInput");
+  const button=$("videoCommentSend");
+
+  const message=input.value.trim();
+
+  if(!message)return;
+
+  button.disabled=true;
+  button.textContent="...";
+
+  try{
+    const {error}=await db
+      .from("product_video_comments")
+      .insert({
+        product_id:activeCommentProductId,
+        message:message
+      });
+
+    if(error)throw error;
+
+    input.value="";
+
+    await openVideoComments(activeCommentProductId);
+
+  }catch(e){
+    console.error("POST COMMENT ERROR",e);
+    notify("Komen gagal dihantar: "+e.message);
+  }finally{
+    button.disabled=false;
+    button.textContent="Hantar";
+  }
+}
+
+/* VIDEO FEED */
+
+function renderVideoFeed(){
+  stopAllFeedVideos();
+
+  videoWatchTimers.forEach(timer=>clearTimeout(timer));
+  videoWatchTimers.clear();
+
+  const feed=$("videoProducts");
+
+  if(!feed)return;
+
+  const videos=publicItems.filter(
+    p=>p.is_active!==false&&safeUrl(p.video_url)
+  );
+
+  if(!videos.length){
+    feed.innerHTML=`
+      <div class="video-empty">
+        <h3>Belum ada video produk</h3>
+        <p>Video produk akan dipaparkan di sini.</p>
+      </div>
+    `;
+    return;
+  }
+
+  feed.innerHTML=videos.map((p,i)=>{
+    const id=escapeHTML(p.id);
+    const liked=isVideoLiked(p.id);
+
+    return `
+      <section class="video-slide" data-index="${i}">
+
+        <video
+          class="feed-video"
+          src="${escapeHTML(safeUrl(p.video_url))}"
+          muted
+          loop
+          playsinline
+          webkit-playsinline
+          preload="metadata">
+        </video>
+
+        <div class="video-progress"></div>
+
+        <div class="video-overlay">
+          <div class="video-details">
+
+            <h3>${escapeHTML(p.title||"Produk SHOPIVA")}</h3>
+
+            <p>${money(p.price)}</p>
+
+            <button
+              class="video-buy"
+              onclick="openProduct('${id}')">
+              Lihat Produk
+            </button>
+
+          </div>
+        </div>
+
+        <div class="video-actions">
+
+          <button
+            class="video-action ${liked?"liked":""}"
+            onclick="toggleVideoLike('${id}',this)">
+            <span class="action-icon">${liked?"♥":"♡"}</span>
+            <span>Like</span>
+          </button>
+
+          <button
+            class="video-action"
+            onclick="openVideoComments('${id}')">
+            <span class="action-icon">▢</span>
+            <span>Komen</span>
+          </button>
+
+          <button
+            class="video-action"
+            onclick="shareVideo('${id}')">
+            <span class="action-icon">↗</span>
+            <span>Share</span>
+          </button>
+
+          <button
+            class="video-action sound-action"
+            onclick="toggleFeedSound(this)">
+            <span class="action-icon">🔇</span>
+            <span>Bunyi</span>
+          </button>
+
+        </div>
+
+      </section>
+    `;
+  }).join("");
+
+  activeFeedVideos=Array.from(
+    feed.querySelectorAll(".feed-video")
+  );
+
+  activeFeedVideos.forEach(v=>{
+    v.addEventListener("timeupdate",()=>{
+      const bar=v.closest(".video-slide")
+        ?.querySelector(".video-progress");
+
+      if(bar&&v.duration){
+        bar.style.width=
+          (v.currentTime/v.duration*100)+"%";
+      }
+    });
+  });
+
+  if("IntersectionObserver" in window){
+
+    videoObserver=new IntersectionObserver(entries=>{
+
+      entries.forEach(entry=>{
+
+        const v=entry.target;
+        const slide=v.closest(".video-slide");
+        const buy=slide?.querySelector(".video-buy");
+        const sound=slide?.querySelector(".sound-action");
+
+        if(entry.isIntersecting&&entry.intersectionRatio>=.65){
+
+          activeFeedVideos.forEach(other=>{
+            if(other!==v){
+              other.pause();
+              other.muted=true;
+
+              const otherSound=other.closest(".video-slide")
+                ?.querySelector(".sound-action");
+
+              if(otherSound){
+                otherSound.querySelector(".action-icon").textContent="🔇";
+              }
+            }
+          });
+
+          v.play().then(()=>{
+
+            if(videoWatchTimers.has(v)){
+              clearTimeout(videoWatchTimers.get(v));
+            }
+
+            const timer=setTimeout(()=>{
+
+              if(
+                v.isConnected&&
+                !v.paused&&
+                slide&&
+                slide.getBoundingClientRect().height>0
+              ){
+                buy?.classList.add("show-buy");
+              }
+
+            },3000);
+
+            videoWatchTimers.set(v,timer);
+
+          }).catch(e=>{
+            console.warn("Video autoplay blocked",e);
+          });
+
+        }else{
+
+          v.pause();
+
+          if(videoWatchTimers.has(v)){
+            clearTimeout(videoWatchTimers.get(v));
+            videoWatchTimers.delete(v);
+          }
+
+          buy?.classList.remove("show-buy");
+
+          if(sound){
+            sound.querySelector(".action-icon").textContent="🔇";
+            v.muted=true;
+          }
+        }
+
+      });
+
+    },{
+      root:feed,
+      threshold:[.25,.65,.9]
+    });
+
+    activeFeedVideos.forEach(v=>{
+      videoObserver.observe(v);
+    });
+
+  }else if(activeFeedVideos[0]){
+
+    activeFeedVideos[0].play().catch(()=>{});
+
+  }
+}
+
+/* SOUND CONTROL */
+
+function toggleFeedSound(button){
+
+  const v=button.closest(".video-slide")
+    ?.querySelector("video");
+
+  if(!v)return;
+
+  const turnOn=v.muted;
+
+  activeFeedVideos.forEach(item=>{
+
+    item.muted=true;
+
+    const b=item.closest(".video-slide")
+      ?.querySelector(".sound-action");
+
+    if(b){
+      b.querySelector(".action-icon").textContent="🔇";
+    }
+
+  });
+
+  if(turnOn){
+    v.muted=false;
+    button.querySelector(".action-icon").textContent="🔊";
+  }
+
+  v.play().catch(()=>{});
+}
+
+  async function initShopiva(){await loadProducts();recordVisit();try{const {data,error}=await db.auth.getSession();if(error)throw error;const session=data?.session;if(session?.user?.id===ADMIN_UID){currentUser=session.user;showDashboard()}else{currentUser=null;if(session?.user)await db.auth.signOut();showLogin()}renderMePage()}catch(e){console.error("INIT ERROR",e);currentUser=null;showLogin();renderMePage()}}
 document.addEventListener("DOMContentLoaded",()=>{if(!$("editProductId")){const hidden=document.createElement("input");hidden.type="hidden";hidden.id="editProductId";$("productFormPanel")?.appendChild(hidden)}setupPreviews();renderCategories();renderMePage();initShopiva()});
 </script>
 </body>
