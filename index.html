@@ -132,6 +132,15 @@ footer{text-align:center;padding:18px 10px;color:#aaa;font-size:10px}@media(min-
   padding:0 17px;
 }
 
+.public-product-card .photo video.product-card-video{
+  display:block;
+  width:100%;
+  height:100%;
+  object-fit:cover;
+  border-radius:inherit;
+  background:#000;
+}
+
 </style>
 </head>
 <body>
@@ -173,8 +182,60 @@ function backToStore(){storeNav("home")}
 function renderPublic(){const input=$("search");searchTerm=String(input?.value||"").toLowerCase().trim();const list=publicItems.filter(p=>p.is_active!==false&&(currentCategory==="Semua"||p.category===currentCategory)&&(!searchTerm||String(p.title||"").toLowerCase().includes(searchTerm)));const featured=list.filter(p=>p.is_featured===true);$("featuredProducts").innerHTML=featured.map(card).join("");setVisible($("featuredSection"),featured.length>0);$("publicProducts").innerHTML=list.map(card).join("");setVisible($("emptyProducts"),list.length===0);renderLiked()}
 function renderCategories(){const box=$("categoryGrid");if(!box)return;const cats=["Semua","Skincare","Kecantikan","Kesihatan","Fesyen","Elektronik","Rumah & Dapur","Ibu & Anak","Makanan & Minuman","Gajet","Lain-lain"];box.innerHTML=cats.map(c=>`<button class="cat ${currentCategory===c?"active":""}" onclick="selectCategory('${escapeHTML(c)}')">${escapeHTML(c)}</button>`).join("")}
 function selectCategory(category){currentCategory=category;if($("search"))$("search").value="";searchTerm="";renderCategories();storeNav("home")}
-function card(p){const id=escapeHTML(p.id),title=escapeHTML(p.title||"Produk"),img=safeUrl(p.image_url),vid=safeUrl(p.video_url);let media=img?`<img src="${escapeHTML(img)}" alt="${title}" loading="lazy" onerror="this.style.display='none'">`:vid?`<video src="${escapeHTML(vid)}" muted playsinline preload="metadata" controls></video>`:`<div class="no-image">📦</div>`;return `<article class="public-product-card"><div class="photo">${media}${p.is_featured?'<span class="featured-label">PILIHAN SHOPIVA</span>':''}<button class="like-btn ${isLiked(p.id)?'liked':''}" aria-label="Simpan produk" onclick="event.stopPropagation();toggleLike('${id}')">♥</button></div><div class="product-info"><h3>${title}</h3><div class="product-price">${money(p.price)}</div><button class="buy-button" onclick="openProduct('${id}')">Lihat Produk</button></div></article>`}
-function openProduct(id){const p=publicItems.find(x=>String(x.id)===String(id));if(!p)return notify("Produk tidak dijumpai.");const link=safeUrl(p.affiliate_url);if(!link)return notify("Pautan affiliate produk belum tersedia.");const win=window.open(link,"_blank","noopener,noreferrer");if(!win)location.href=link}
+
+function card(p){
+  const id=escapeHTML(p.id);
+  const title=escapeHTML(p.title||"Produk");
+  const img=safeUrl(p.image_url);
+  const vid=safeUrl(p.video_url);
+
+  let media=vid
+    ? `<video
+         class="product-card-video"
+         src="${escapeHTML(vid)}"
+         ${img?`poster="${escapeHTML(img)}"`:""}
+         autoplay
+         muted
+         loop
+         playsinline
+         webkit-playsinline
+         preload="metadata"
+         controls
+         oncanplay="this.play().catch(()=>{})">
+       </video>`
+    : img
+      ? `<img src="${escapeHTML(img)}"
+           alt="${title}"
+           loading="lazy"
+           onerror="this.style.display='none'">`
+      : `<div class="no-image">📦</div>`;
+
+  return `
+    <article class="public-product-card">
+      <div class="photo">
+        ${media}
+        ${p.is_featured
+          ? '<span class="featured-label">PILIHAN SHOPIVA</span>'
+          : ''}
+        <button
+          class="like-btn ${isLiked(p.id)?'liked':''}"
+          aria-label="Simpan produk"
+          onclick="event.stopPropagation();toggleLike('${id}')">
+          ♥
+        </button>
+      </div>
+      <div class="product-info">
+        <h3>${title}</h3>
+        <div class="product-price">${money(p.price)}</div>
+        <button class="buy-button"
+          onclick="openProduct('${id}')">
+          Lihat Produk
+        </button>
+      </div>
+    </article>`;
+}
+
+  function openProduct(id){const p=publicItems.find(x=>String(x.id)===String(id));if(!p)return notify("Produk tidak dijumpai.");const link=safeUrl(p.affiliate_url);if(!link)return notify("Pautan affiliate produk belum tersedia.");const win=window.open(link,"_blank","noopener,noreferrer");if(!win)location.href=link}
 async function loadProducts(){try{const {data,error}=await db.from("products").select("*").order("sort_order",{ascending:true}).order("created_at",{ascending:false});if(error)throw error;publicItems=data||[];renderCategories();renderPublic();if(currentUser)renderAdminProducts();return true}catch(e){console.error("LOAD PRODUCTS ERROR",e);notify("Gagal memuatkan produk: "+e.message);return false}}
 function stopAllFeedVideos(){if(videoObserver){videoObserver.disconnect();videoObserver=null}document.querySelectorAll("#videoProducts video").forEach(v=>{v.pause();v.muted=true});activeFeedVideos=[]}
 function renderVideoFeed(){stopAllFeedVideos();const feed=$("videoProducts");if(!feed)return;const videos=publicItems.filter(p=>p.is_active!==false&&safeUrl(p.video_url));if(!videos.length){feed.innerHTML='<div class="video-empty"><h3>Belum ada video produk</h3><p>Video produk akan dipaparkan di sini.</p></div>';return}feed.innerHTML=videos.map((p,i)=>`<section class="video-slide" data-index="${i}"><video class="feed-video" src="${escapeHTML(safeUrl(p.video_url))}" muted loop playsinline webkit-playsinline preload="metadata"></video><div class="video-progress"></div><div class="video-overlay"><div class="video-details"><h3>${escapeHTML(p.title||"Produk SHOPIVA")}</h3><p>${money(p.price)}</p><button class="video-buy" onclick="openProduct('${escapeHTML(p.id)}')">Lihat Produk</button></div><button class="video-sound" onclick="toggleFeedSound(this)">🔇</button></div></section>`).join("");activeFeedVideos=Array.from(feed.querySelectorAll("video"));activeFeedVideos.forEach(v=>v.addEventListener("timeupdate",()=>{const bar=v.closest(".video-slide")?.querySelector(".video-progress");if(bar&&v.duration)bar.style.width=(v.currentTime/v.duration*100)+"%"}));if("IntersectionObserver" in window){videoObserver=new IntersectionObserver(entries=>entries.forEach(entry=>{const v=entry.target;if(entry.isIntersecting&&entry.intersectionRatio>=.65){activeFeedVideos.forEach(other=>{if(other!==v){other.pause();other.muted=true;const b=other.closest(".video-slide")?.querySelector(".video-sound");if(b)b.textContent="🔇"}});v.play().catch(()=>{});}else v.pause()}),{root:feed,threshold:[.25,.65,.9]});activeFeedVideos.forEach(v=>videoObserver.observe(v))}else if(activeFeedVideos[0])activeFeedVideos[0].play().catch(()=>{})}
