@@ -653,6 +653,7 @@ function renderVideoFeed(){
             onclick="toggleVideoLike('${id}',this)">
             <span class="action-icon">${liked?"♥":"♡"}</span>
             <span>Like</span>
+<span class="like-count">${videoLikeCounts[String(p.id)]||0}</span>
           </button>
 
           <button
