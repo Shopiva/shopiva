@@ -782,10 +782,10 @@ function renderVideoFeed(){
   }else if(activeFeedVideos[0]){
 
     activeFeedVideos[0].play().catch(()=>{});
-
+loadVideoLikeCounts();
   }
 }
-loadVideoLikeCounts();
+
 /* SOUND CONTROL */
 
 function toggleFeedSound(button){
