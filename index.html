@@ -397,11 +397,18 @@ async function toggleVideoLike(id,button){
     }
 
   }catch(e){
-    console.error("Toggle video like error:",e);
-    alert("Like tidak berjaya disimpan. Sila cuba lagi.");
-  }finally{
-    if(button)button.disabled=false;
-  }
+  console.error("Toggle video like error:",e);
+
+  alert(
+    "RALAT SUPABASE:\n"+
+    (e.message||"Tidak diketahui")+
+    "\nKod: "+(e.code||"-")+
+    "\nButiran: "+(e.details||"-")+
+    "\nPetunjuk: "+(e.hint||"-")
+  );
+}finally{
+  if(button)button.disabled=false;
+}
 }
 
 
