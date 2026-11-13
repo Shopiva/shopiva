@@ -263,8 +263,50 @@ footer{text-align:center;padding:18px 10px;color:#aaa;font-size:10px}@media(min-
 </style>
 </head>
 <body>
-<header id="storeHeader"><div class="top"><div><div class="logo">SHOPIVA</div><div class="tagline">Your Marketplace, Your Style.</div></div></div><input id="search" class="search" type="search" placeholder="Cari produk kegemaran anda..." oninput="renderPublic()"></header>
-<main id="homePage"><div class="section-title">Kategori Produk</div><div class="categories" id="categoryGrid"></div><div id="featuredSection"><div class="section-title">Produk Pilihan SHOPIVA</div><div class="products" id="featuredProducts"></div></div><div class="section-title">Semua Produk</div><div class="products" id="publicProducts"></div><div id="emptyProducts" class="empty hidden">Belum ada produk untuk dipaparkan.</div></main>
+<header id="storeHeader">
+
+  <div class="top">
+
+    <div class="brand-wrap">
+
+      <div class="logo-mark">S</div>
+
+      <div>
+        <div class="logo">SHOP<span>IVA</span></div>
+        <div class="tagline">
+          Shop Smart · Share More · Earn Together
+        </div>
+      </div>
+
+    </div>
+
+    <div class="header-actions">
+
+      <button class="header-icon"
+        aria-label="Kongsi SHOPIVA"
+        onclick="shareShopiva()">↗</button>
+
+      <button class="header-icon"
+        aria-label="Produk disukai"
+        onclick="storeNav('liked')">♡</button>
+
+    </div>
+
+  </div>
+
+  <div class="search-wrap">
+    <span class="search-icon">⌕</span>
+
+    <input
+      id="search"
+      class="search"
+      type="search"
+      placeholder="Cari produk kegemaran anda..."
+      oninput="renderPublic()">
+  </div>
+
+</header>
+  <main id="homePage"><div class="section-title">Kategori Produk</div><div class="categories" id="categoryGrid"></div><div id="featuredSection"><div class="section-title">Produk Pilihan SHOPIVA</div><div class="products" id="featuredProducts"></div></div><div class="section-title">Semua Produk</div><div class="products" id="publicProducts"></div><div id="emptyProducts" class="empty hidden">Belum ada produk untuk dipaparkan.</div></main>
 <main id="videoPage" class="hidden"><div class="video-feed" id="videoProducts"></div></main>
 <main id="likedPage" class="hidden"><div class="page-heading">Produk Disukai</div><div class="page-subtitle">Koleksi produk kegemaran anda.</div><div class="products" id="likedProducts"></div><div id="emptyLiked" class="empty hidden">Belum ada produk disukai.</div></main>
 <main id="mePage" class="hidden"><div class="page-heading">Akaun Saya</div><div class="me-card"><div class="me-avatar">S</div><div class="me-title">Selamat datang ke SHOPIVA</div><div class="me-desc">Temui produk menarik daripada Shopee dan TikTok Shop. Simpan produk kegemaran dan terokai video produk.</div><button class="me-button" onclick="openLogin()">Log Masuk Admin</button></div><div class="me-card"><div class="me-title">Tentang SHOPIVA</div><div class="me-desc">SHOPIVA · Affiliate Marketplace</div></div></main>
