@@ -710,12 +710,12 @@ function renderVideoFeed(){
 <span class="like-count">${videoLikeCounts[String(p.id)]||0}</span>
           </button>
 
-          <button
-            class="video-action"
-            onclick="openVideoComments('${id}')">
-            <span class="action-icon">▢</span>
-            <span>Komen</span>
-          </button>
+          <button class="video-action"
+  onclick="openVideoComments('${id}')">
+  <span class="action-icon">▢</span>
+  <span>Komen</span>
+  <span class="comment-count">${videoCommentCounts[String(p.id)]||0}</span>
+</button>
 
           <button
             class="video-action"
