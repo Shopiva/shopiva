@@ -264,9 +264,18 @@ db.auth.onAuthStateChange((event,session)=>{if(event==="SIGNED_OUT"){currentUser
    SHOPIVA VIDEO SOCIAL FEATURES
 ===================================== */
 
+
 let videoLikeData={};
+let videoLikeCounts={};
 let activeCommentProductId=null;
 let videoWatchTimers=new Map();
+
+let videoVisitorId=localStorage.getItem("shopiva_video_visitor_id");
+
+if(!videoVisitorId){
+  videoVisitorId=crypto.randomUUID();
+  localStorage.setItem("shopiva_video_visitor_id",videoVisitorId);
+}
 
 try{
   videoLikeData=JSON.parse(
@@ -291,25 +300,111 @@ function isVideoLiked(id){
   return !!videoLikeData[String(id)];
 }
 
-function toggleVideoLike(id,button){
-  id=String(id);
+async function loadVideoLikeCounts(){
+  const videos=publicItems.filter(
+    p=>p.is_active!==false&&safeUrl(p.video_url)
+  );
 
-  if(isVideoLiked(id)){
-    delete videoLikeData[id];
-  }else{
-    videoLikeData[id]=true;
+  const ids=videos.map(p=>String(p.id));
+
+  if(!ids.length)return;
+
+  const {data,error}=await db
+    .from("product_video_likes")
+    .select("product_id")
+    .in("product_id",ids);
+
+  if(error){
+    console.error("Load video likes error:",error);
+    return;
   }
 
-  saveVideoLikes();
+  videoLikeCounts={};
+
+  ids.forEach(id=>{
+    videoLikeCounts[id]=0;
+  });
+
+  (data||[]).forEach(row=>{
+    const id=String(row.product_id);
+    videoLikeCounts[id]=(videoLikeCounts[id]||0)+1;
+  });
+
+  videos.forEach(p=>{
+    const id=String(p.id);
+    const slide=document.querySelector(
+      `.video-slide [onclick*="toggleVideoLike('${id}'"]`
+    )?.closest(".video-action");
+
+    if(slide){
+      const count=slide.querySelector(".like-count");
+      if(count)count.textContent=videoLikeCounts[id]||0;
+    }
+  });
+}
+
+async function toggleVideoLike(id,button){
+  id=String(id);
+
+  if(!videoVisitorId)return;
 
   const liked=isVideoLiked(id);
 
-  if(button){
-    button.classList.toggle("liked",liked);
-    button.querySelector(".action-icon").textContent=
-      liked?"♥":"♡";
+  if(button)button.disabled=true;
+
+  try{
+    if(liked){
+      const {error}=await db
+        .from("product_video_likes")
+        .delete()
+        .eq("product_id",id)
+        .eq("visitor_id",videoVisitorId);
+
+      if(error)throw error;
+
+      delete videoLikeData[id];
+
+      videoLikeCounts[id]=Math.max(
+        0,(videoLikeCounts[id]||0)-1
+      );
+
+    }else{
+      const {error}=await db
+        .from("product_video_likes")
+        .insert({
+          product_id:id,
+          visitor_id:videoVisitorId
+        });
+
+      if(error)throw error;
+
+      videoLikeData[id]=true;
+
+      videoLikeCounts[id]=(videoLikeCounts[id]||0)+1;
+    }
+
+    saveVideoLikes();
+
+    if(button){
+      const nowLiked=isVideoLiked(id);
+      button.classList.toggle("liked",nowLiked);
+
+      const icon=button.querySelector(".action-icon");
+      if(icon)icon.textContent=nowLiked?"♥":"♡";
+
+      const count=button.querySelector(".like-count");
+      if(count)count.textContent=videoLikeCounts[id]||0;
+    }
+
+  }catch(e){
+    console.error("Toggle video like error:",e);
+    alert("Like tidak berjaya disimpan. Sila cuba lagi.");
+  }finally{
+    if(button)button.disabled=false;
   }
 }
+
+
 
 async function shareVideo(id){
   const p=publicItems.find(
