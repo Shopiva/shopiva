@@ -343,7 +343,49 @@ async function loadVideoLikeCounts(){
     }
   });
 }
+async function loadVideoCommentCounts(){
+  const videos=publicItems.filter(
+    p=>p.is_active!==false&&safeUrl(p.video_url)
+  );
 
+  const ids=videos.map(p=>String(p.id));
+
+  videoCommentCounts={};
+
+  if(!ids.length)return;
+
+  const {data,error}=await db
+    .from("product_video_comments")
+    .select("product_id")
+    .in("product_id",ids);
+
+  if(error){
+    console.error("Load video comments count error:",error);
+    return;
+  }
+
+  ids.forEach(id=>{
+    videoCommentCounts[id]=0;
+  });
+
+  (data||[]).forEach(row=>{
+    const id=String(row.product_id);
+    videoCommentCounts[id]=(videoCommentCounts[id]||0)+1;
+  });
+
+  document.querySelectorAll(
+    ".video-slide .comment-count"
+  ).forEach(el=>{
+    const button=el.closest(".video-action");
+    const onclick=button?.getAttribute("onclick")||"";
+
+    const id=ids.find(x=>
+      onclick.includes("openVideoComments('"+x+"'")
+    );
+
+    if(id)el.textContent=videoCommentCounts[id]||0;
+  });
+}
 async function toggleVideoLike(id,button){
   id=String(id);
 
