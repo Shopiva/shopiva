@@ -369,14 +369,18 @@ async function toggleVideoLike(id,button){
       );
 
     }else{
-      const {error}=await db
-        .from("product_video_likes")
-        .insert({
-          product_id:id,
-          visitor_id:videoVisitorId
-        });
+      const {data,error}=await db
+  .from("product_video_likes")
+  .insert({
+    product_id:id,
+    visitor_id:videoVisitorId
+  })
+  .select("id,product_id,visitor_id")
+  .single();
 
-      if(error)throw error;
+if(error)throw error;
+
+console.log("LIKE BERJAYA DISIMPAN:",data);
 
       videoLikeData[id]=true;
 
