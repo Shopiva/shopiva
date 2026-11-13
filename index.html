@@ -605,6 +605,7 @@ async function postVideoComment(event){
   event.preventDefault();
 
   if(!activeCommentProductId)return;
+  await loadVideoCommentCounts();
 
   const input=$("videoCommentInput");
   const button=$("videoCommentSend");
